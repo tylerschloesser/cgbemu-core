@@ -16,6 +16,8 @@ void setup( void )
 
 void get_next_frame( uint16_t frame[FRAME_HEIGHT][FRAME_WIDTH] )
 {
+    //fprintf(stderr, "get_next_frame\n");
+
 	start_cpu();
 	emulate_cpu();
 	//dprintf("after emulate_cpu()");

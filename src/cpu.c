@@ -615,6 +615,7 @@ void initialize_cpu()
 
 void reinitialize_cpu()
 {
+    printf("reinitialize_cpu()\n");
 	assert( cpu_initialized == true );
 	
 	if( emulator_state == STARTED ) {
@@ -735,7 +736,9 @@ static void sync_refresh_rate( u32 *total_cycles )
 {
 	if(*total_cycles < SCREEN_REFRESH_CYCLES) return;
 	*total_cycles = 0;
-	interrupt( VBLANK );
+
+    /* TODO this caused an assertion fail, not sure why... */
+	//interrupt( VBLANK );
 	
 	/*
     if( *total_cycles < SCREEN_REFRESH_CYCLES || fullspeed ) {

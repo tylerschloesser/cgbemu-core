@@ -6,7 +6,7 @@
 
 #include <GL/freeglut.h>
 
-#include "android_interface.h"
+#include "../android_interface.h"
 
 #define TEXTURE_WIDTH 256
 #define TEXTURE_HEIGHT 256
@@ -30,9 +30,6 @@ static int last_frame = 0;
 
 static int target_elapsed = 16; // 60fps
 
-#ifndef _WIN32
-	#define Sleep sleep
-#endif
 
 bool step_through = false;
 void step()
@@ -47,7 +44,14 @@ void idle(void)
 	int elapsed = current_time - last_frame;
 	
 	if(elapsed < target_elapsed) {
+#ifdef _WIN32
 		Sleep(elapsed);
+#else
+        usleep(elapsed * 1000);
+        //fprintf(stderr, "sleeping for %i micro-seconds\n", elapsed);
+        //usleep(elapsed);
+
+#endif
 	}
 	last_frame = current_time;
 	
@@ -249,6 +253,7 @@ int main(int argc, char** argv)
 	glutSpecialFunc(special);
 	glutSpecialUpFunc(specialUp);
 	
+    //fprintf(stderr, "before glutMainLoop()\n");
 
 	glutMainLoop();
 	return 0;

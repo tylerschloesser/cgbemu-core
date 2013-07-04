@@ -114,6 +114,7 @@ void gameboy_power_on()
 
 void gameboy_power_off()
 {
+    printf("gameboy_power_off()\n");
 	stop_cpu();
 }
 
