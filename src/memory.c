@@ -174,10 +174,13 @@ void MBC_write(u16 location, u8 data)
 	{
         /* 3000-3FFF ROM bank select MSB */
 		//assert( data == 0 || data == 1 );
+		
         if(data != 0 || data != 1) {
-            //fprintf(stderr,"invalid ROM bank select MSB value\n");
+            fprintf(stderr,"invalid ROM bank select MSB value\n");
             return;
         }
+		
+		data = data & 0x01;
         mbc_control[ROM_BANK_HIGH] = data;
     }
 	else if( location < 0x6000 ) 
@@ -502,14 +505,6 @@ u8 MBC_read(u16 location)
         } 
 		else if(location < 0xFFFF) 
 		{
-            /* TEMPTEMPTEMPTEMPTE */
-            if(location == 0xFF80) {
-            	/*
-                fprintf(stderr, "reading %X to 0xFF80\n", zero_page[0]);
-                getchar();
-                */
-            }
-        
             /* FF80-FFFE zero page */
             int offset = 0xFF80;
             return zero_page[location - offset];

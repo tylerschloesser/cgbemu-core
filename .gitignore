@@ -1,3 +1,4 @@
-src/test/roms/
-src/test/test.exe
-src/test/a.out
+src/roms/
+src/test.exe
+src/a.out
+src/test
