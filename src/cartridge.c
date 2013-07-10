@@ -3,6 +3,7 @@
 
 #include "memory.h"
 #include <string.h>
+static int get_cartridge_ram_size(int header_value);
 /* The contents of "buffer" are not needed after
    this function is called
    TODO
@@ -24,13 +25,47 @@ int load_cartridge(const uint8_t* buffer, int size) {
 
     cartridge_rom_size = size;
 
-    printf("cartridge loaded: %i KiB\n", size / 1024);
+    /* Cartridge RAM */
+    cartridge_ram_size = get_cartridge_ram_size(cartridge_rom[0x0147]);
+    //TODO handle errors
+    assert(cartridge_ram_size > 0);
+    assert(cartridge_ram == NULL);
+    cartridge_ram = (uint8_t*)malloc(cartridge_ram_size);
+    assert(cartridge_ram != NULL); 
+    
+
+    printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
+            cartridge_ram_size / 1024, size / 1024);
 
     //TODO actually verify...
     verify_cartridge();
 
     return 0;
 }
+
+static int get_cartridge_ram_size(int header_value) {
+    switch(header_value) {
+        case 0:
+            return 0; // no cartridge ram
+        case 1:
+            return 0x800; // 2KiB
+        case 2:
+            return 0x2000; // 8KiB
+        case 3:
+            return 0x8000; // 32KiB
+    }
+    return -1;
+}
+
+static int get_cartridge_rom_size(int header_value) {
+    if(header_value >= 0 && header_value <= 7) {
+        return(0x8000 << header_value);
+    }
+    return -1;
+}
+
+
+
 
 
 /* TODO finish this */
@@ -44,7 +79,12 @@ int verify_cartridge() {
 	}
 	printf("Title: %s\n", title);
 	printf("CartridgeType: %X\n", cartridge_rom[0x147]);
-	printf("Rom Size: %X\n", cartridge_rom[0x148]);
+
+    int expected_cartridge_rom_size =
+       get_cartridge_rom_size(cartridge_rom[0x148]);
+
+	printf("expected ROM size: %i KiB\n", 
+            expected_cartridge_rom_size / 1024);
 	
 	// calculate checksum
 	u16 sum;

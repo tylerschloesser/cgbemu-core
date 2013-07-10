@@ -26,12 +26,11 @@
 #define PALLETE_SIZE 0x40
 #define SPRITE_PALLETE_SIZE 0x40
 
-
-u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
-//u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
-
 int cartridge_rom_size = 0;
+int cartridge_ram_size = 0;
+
 uint8_t* cartridge_rom = NULL;
+uint8_t* cartridge_ram = NULL;
 
 u8 pallete[PALLETE_SIZE];
 u8 sprite_pallete[SPRITE_PALLETE_SIZE];
@@ -89,14 +88,7 @@ void initialize_memory( void )
 
 	printf("CLEARING ALL MEMORY\n");
 	int i;
-	for(i = 0; i < CARTRIDGE_RAM_SIZE; ++i) {
-		cartridge_ram[i] = 0;
-	}
-    /*
-	for(i = 0; i < CARTRIDGE_ROM_SIZE; ++i) {
-		cartridge_rom[i] = 0;
-	}
-    */
+
 	for(i = 0; i < GAMEBOY_RAM_SIZE; ++i) {
 		gameboy_ram[i] = 0;
 	}
@@ -220,7 +212,8 @@ void MBC_write(u16 location, u8 data)
 		u32 offset = 0xA000;
 		u32 ram_bank = mbc_control[RAM_BANK];
 		u32 ram_location = ( ram_bank * 0x2000 ) + location - offset;
-        if(ram_location >= CARTRIDGE_RAM_SIZE) {
+        
+        if(ram_location >= cartridge_ram_size) {
             return;
         }
 		cartridge_ram[ram_location] = data;

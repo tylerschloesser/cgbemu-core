@@ -7,12 +7,12 @@
 #include "cpu.h"
 
 #define GAMEBOY_RAM_SIZE 0x8000
-#define CARTRIDGE_RAM_SIZE 0x20000  //128KB
 #define GAMEBOY_VRAM_SIZE 0x4000
-//#define CARTRIDGE_ROM_SIZE 0x800000 //8MB
-extern int cartridge_rom_size;
 #define GAMEBOY_OAM_SIZE 0x20000  //128KB
 #define BIOS_SIZE 0x900
+
+extern int cartridge_ram_size;
+extern int cartridge_rom_size;
 
 //TODO TEMP
 bool in_bios;
@@ -111,7 +111,8 @@ enum hardware_register {
 
     //bool in_bios = true;
 
-extern u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
+//extern u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
+extern uint8_t* cartridge_ram;
 extern uint8_t* cartridge_rom;
 //extern u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
 
