@@ -14,8 +14,6 @@ void gameboy_load_state( char* save_state_filepath );
 
 void gameboy_toggle_speed();
 
-bool verify_cartridge(); //not finished
-
 typedef enum {
 	UP,
 	DOWN,

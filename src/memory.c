@@ -26,9 +26,12 @@
 #define PALLETE_SIZE 0x40
 #define SPRITE_PALLETE_SIZE 0x40
 
-u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
-u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
 
+u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
+//u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
+
+int cartridge_rom_size = 0;
+uint8_t* cartridge_rom = NULL;
 
 u8 pallete[PALLETE_SIZE];
 u8 sprite_pallete[SPRITE_PALLETE_SIZE];
@@ -89,9 +92,11 @@ void initialize_memory( void )
 	for(i = 0; i < CARTRIDGE_RAM_SIZE; ++i) {
 		cartridge_ram[i] = 0;
 	}
+    /*
 	for(i = 0; i < CARTRIDGE_ROM_SIZE; ++i) {
 		cartridge_rom[i] = 0;
 	}
+    */
 	for(i = 0; i < GAMEBOY_RAM_SIZE; ++i) {
 		gameboy_ram[i] = 0;
 	}

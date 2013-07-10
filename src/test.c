@@ -191,14 +191,14 @@ void specialUp(int key, int x, int y)
 	processSpecial(key, false);
 }
 
-int load_cartridge(char* filepath)
+int open_cartridge(char* filepath)
 {
 	//char filepath[] = "E:\\Software\\Gaming\\Pokemon Rom and emulator Pack\\POKEMON_ROM_PACK\\POKEMON_ROM_PACK\\GB ROMS\\Pokemon Yellow.gbc";
 	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\cpu_instrs.gb";
 
 	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\individual\\02-interrupts.gb";
     if(filepath == NULL)
-    	filepath = "./roms/individual/01-special.gb";
+    	filepath = "./roms/cpu_instrs.gb";
 
 
 	FILE *file = fopen(filepath, "rb");
@@ -273,10 +273,10 @@ int main(int argc, char** argv)
 	setup();
     
     if(argc > 1) {
-        load_cartridge(argv[1]);
+        open_cartridge(argv[1]);
     } else {
 
-	    load_cartridge(NULL);
+	    open_cartridge(NULL);
     }
 
     

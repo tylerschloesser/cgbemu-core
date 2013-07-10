@@ -25,33 +25,8 @@ void gameboy_toggle_speed() {
     fullspeed = !fullspeed;
 }
 
-/* not finished */
-bool verify_cartridge() {
-	
-	char title[0x10];
-	title[0x10 - 1] = '\0';
-	int i;
-	for(i = 0x134; i < 0x144; ++i) {
-		title[i - 0x134] = cartridge_rom[i];
-	}
-	printf("Title: %s\n", title);
-	printf("CartridgeType: %X\n", cartridge_rom[0x147]);
-	printf("Rom Size: %X\n", cartridge_rom[0x148]);
-	
-	// calculate checksum
-	u16 sum;
-	for(i = 0; i < CARTRIDGE_ROM_SIZE; ++i) {
-		sum += cartridge_rom[i];
-	}
-	sum -= (cartridge_rom[0x14e] + cartridge_rom[0x14f]);
-	
-	printf("Sum: %X\n", sum);
-	
-	printf("checksum: %X %X\n", cartridge_rom[0x14e], cartridge_rom[0x14f]);
-	
-	return true;
-}
-
+//TODO deprecated
+/*
 void gameboy_load_cartridge(char* cartridge_filepath) {
 
 	printf("Opening %s...\n", cartridge_filepath);
@@ -66,6 +41,7 @@ void gameboy_load_cartridge(char* cartridge_filepath) {
 	
 	//printf("Done (%s)\n", size_to_string(bytes_read));
 }
+*/
 
 void gameboy_load_bios(char *bios_filepath) {
 	printf("Opening %s...\n", bios_filepath);
@@ -168,7 +144,8 @@ void gameboy_toggle_button( Button button, bool pressed )
 		}
 	}
 }
-
+//TODO deprecated
+/*
 void gameboy_save_state( char* save_state_filepath )
 {
 	FILE* file = fopen( save_state_filepath, "wb+" );
@@ -253,3 +230,4 @@ void gameboy_load_state( char* save_state_filepath )
 	
 	start_cpu();
 }
+*/

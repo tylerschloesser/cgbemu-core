@@ -6,7 +6,7 @@
 #include "screen.h"
 #include "gameboy.h"
 #include "memory.h"
-
+#include "cartridge.h"
 
 
 void setup( void )
@@ -67,18 +67,9 @@ uint16_t* cgbemu_get_screen_buffer()
 	return (uint16_t*)screen_buffer;
 }
 
-void cgbemu_load_cartridge(uint8_t* buffer, int size)
+int cgbemu_load_cartridge(const uint8_t* buffer, int size)
 {
-	assert(cartridge_rom != NULL);
-	assert(size > 0);
-	
-	if(size > CARTRIDGE_ROM_SIZE) {
-		printf("invalid rom size\n");
-		return;
-	}
-	
-	memcpy(cartridge_rom, buffer, size);
-	verify_cartridge();
+    return load_cartridge(buffer, size);
 }
 
 void cgbemu_load_bios(uint8_t* buffer, int size)

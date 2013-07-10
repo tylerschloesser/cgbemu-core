@@ -9,7 +9,8 @@
 #define GAMEBOY_RAM_SIZE 0x8000
 #define CARTRIDGE_RAM_SIZE 0x20000  //128KB
 #define GAMEBOY_VRAM_SIZE 0x4000
-#define CARTRIDGE_ROM_SIZE 0x800000 //8MB
+//#define CARTRIDGE_ROM_SIZE 0x800000 //8MB
+extern int cartridge_rom_size;
 #define GAMEBOY_OAM_SIZE 0x20000  //128KB
 #define BIOS_SIZE 0x900
 
@@ -111,7 +112,8 @@ enum hardware_register {
     //bool in_bios = true;
 
 extern u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
-extern u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
+extern uint8_t* cartridge_rom;
+//extern u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
 
 extern u8 pallete[0x40]; //8 palletes - 4 colors per pallete - 2 bytes per color
 extern u8 sprite_pallete[0x40];
