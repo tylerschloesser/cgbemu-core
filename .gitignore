@@ -2,3 +2,6 @@ src/roms/
 src/test.exe
 src/a.out
 src/test
+*.swp
+*.o
+
