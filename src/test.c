@@ -191,13 +191,14 @@ void specialUp(int key, int x, int y)
 	processSpecial(key, false);
 }
 
-int load_cartridge()
+int load_cartridge(char* filepath)
 {
 	//char filepath[] = "E:\\Software\\Gaming\\Pokemon Rom and emulator Pack\\POKEMON_ROM_PACK\\POKEMON_ROM_PACK\\GB ROMS\\Pokemon Yellow.gbc";
 	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\cpu_instrs.gb";
 
 	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\individual\\02-interrupts.gb";
-	char filepath[] = ".\\roms\\pokemon_yellow.gbc";
+    if(filepath == NULL)
+    	filepath = "./roms/individual/01-special.gb";
 
 
 	FILE *file = fopen(filepath, "rb");
@@ -230,14 +231,56 @@ int load_cartridge()
 	return size;
 }
 
+int load_bios()
+{
+    
+    char filepath[] = "./bios/gbc_bios.bin";
+
+	FILE *file = fopen(filepath, "rb");
+
+	if(!file) {
+        perror("fopen() failed");
+		return 0;
+	}
+	
+	fseek(file, 0, SEEK_END);
+	int	size = ftell(file);
+	rewind(file);
+	
+	uint8_t* buffer = malloc(size);
+	
+	if(fread(buffer, sizeof(*buffer), size, file) == 0) {
+        perror("fread() failed");
+		fclose(file);
+		return 0;
+	}
+	
+	fclose(file);
+	
+	cgbemu_load_bios(buffer, size);
+	
+	free(buffer);
+	
+	return size;
+ 
+}
+
 int main(int argc, char** argv)
 {
 	pixels = malloc(PIXELS_SIZE);
 	
 	
 	setup();
-	
-	load_cartridge();
+    
+    if(argc > 1) {
+        load_cartridge(argv[1]);
+    } else {
+
+	    load_cartridge(NULL);
+    }
+
+    
+    load_bios();
 	
 	glutInit(&argc, argv);
 	glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB);

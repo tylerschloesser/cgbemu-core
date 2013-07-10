@@ -25,4 +25,5 @@ void cgbemu_run_to_vblank();
 
 uint16_t* cgbemu_get_screen_buffer();
 
-void cgbemu_load_cartridge(uint8_t* cartridge_rom, int size);
+void cgbemu_load_cartridge(uint8_t* buffer, int size);
+void cgbemu_load_bios(uint8_t* buffer, int size);

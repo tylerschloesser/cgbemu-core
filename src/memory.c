@@ -37,8 +37,7 @@ u8 gameboy_ram[GAMEBOY_RAM_SIZE];
 u8 gameboy_vram[GAMEBOY_VRAM_SIZE];
 u8 gameboy_oam[GAMEBOY_OAM_SIZE];
 
-//u8 bios[BIOS_SIZE];
-#include "bios.h"
+u8 bios[BIOS_SIZE];
 
 u8 zero_page[0x7F];             //127B
 u8 interrupt_enable;
@@ -136,6 +135,10 @@ void initialize_memory( void )
 	memory_initialized = true;
 	
 }
+
+//TODO temporary
+bool in_bios = true;
+//i have yet to figure out the dif between cgb and gb bios
 
 void reinitialize_memory( void )
 {
@@ -307,6 +310,10 @@ void MBC_write(u16 location, u8 data)
 					break;
 				case TAC:
 				{
+                    //TODO TEMP
+
+                    //if(data == 0x05) cpu_step = true;
+
 					//update timer control
 					if((hardware_registers[TAC] & 0x3) != (data & 0x3)) {
 						//frequency has changed
@@ -365,10 +372,13 @@ void MBC_write(u16 location, u8 data)
 				}
 				case BLCK:
 				{
+                    printf("WRITING %X to BLCK\n", data);
+                    
 					if(data == 0x11) {
 						printf("disabling bios\n");
 						output_opcodes = true;
 					}
+                    in_bios = false;
 				}
 			}
 			
@@ -399,6 +409,9 @@ void MBC_write(u16 location, u8 data)
 u8 MBC_read(u16 location)
 {
 	assert( memory_initialized == true );
+    if(in_bios ==false) {
+           //printf("reading %X\n", location);
+    }
 	
     /*
     if( memory_debugger_enabled ) {
@@ -414,10 +427,12 @@ u8 MBC_read(u16 location)
     if( location < 0x4000 ) 
 	{
 		/* 0000-3FFF ROM bank 0 */
-		if( hardware_registers[BLCK] != 0x11 ) 
+		//if( hardware_registers[BLCK] != 0x11 ) 
+        if(in_bios)
 		{
             /* BIOS is enabled */
             if( location < 0x100 || ( location > 0x1FF && location < 0x900 ) )
+            //if(location < 0x100)
             {
                 return bios[location];
             }
@@ -429,7 +444,12 @@ u8 MBC_read(u16 location)
 		/* 4000-7FFF ROM bank 0 to n */
         u32 rom_bank = mbc_control[ROM_BANK_LOW];
         rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
+        if(rom_bank == 0) rom_bank = 1;  //TODO temp
+        //TODO FIX THIS
+        // this is not correct. for MBC1 rom bank 0 is actually rom
+        //bank 1 in this region 
         u32 rom_location = ( rom_bank * 0x4000 ) + ( location - 0x4000 );
+        //printf("rom_location = %x\n", rom_location);
 		return cartridge_rom[rom_location];
     } 
 	else if (location < 0xA000) 

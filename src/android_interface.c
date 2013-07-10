@@ -81,6 +81,22 @@ void cgbemu_load_cartridge(uint8_t* buffer, int size)
 	verify_cartridge();
 }
 
+void cgbemu_load_bios(uint8_t* buffer, int size)
+{
+	assert(cartridge_rom != NULL);
+	assert(size > 0);
+	
+	if(size > BIOS_SIZE) {
+		printf("invalid bios size\n");
+		return;
+	}
+	
+	memcpy(bios, buffer, size);
+}
+
+
+
+
 
 
 

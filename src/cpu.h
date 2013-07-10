@@ -7,6 +7,8 @@
 //remember to change this, maybe a separate debugger file?
 #include "../gui/debugger.h"
 */
+//TEMP
+extern bool cpu_step;
 
 typedef union
 {

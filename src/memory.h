@@ -13,6 +13,8 @@
 #define GAMEBOY_OAM_SIZE 0x20000  //128KB
 #define BIOS_SIZE 0x900
 
+//TODO TEMP
+bool in_bios;
 
 enum MBC_control {
     RAM_ENABLE,
