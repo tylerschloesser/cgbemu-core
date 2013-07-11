@@ -2,19 +2,6 @@
 
 #include "joypad.h"
 
-/*
-#include "../gui/debugger.h"
-*/
-
-/*
-#define INVALID_WRITE( location )															\
-			fprintf( stderr, "attempted to write to invalid location: %04X\n", location ); 	\
-			exit( EXIT_FAILURE )
-			
-#define INVALID_READ( location )															\
-			fprintf( stderr, "attempted to read from invalid location: %04X\n", location ); 	\
-			exit( EXIT_FAILURE )
-*/
 #define INVALID_WRITE( location )															\
 			/*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/ 	\
 			return
