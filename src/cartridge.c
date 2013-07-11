@@ -43,7 +43,6 @@ typedef struct {
     char* name;
     int id;
 } CartridgeType;
-
     
 
 CartridgeType cartridge_types[] = {
@@ -119,8 +118,13 @@ int load_cartridge(const uint8_t* buffer, int size) {
     //TODO handle errors
     assert(cartridge_ram_size >= 0);
     assert(cartridge_ram == NULL);
-    cartridge_ram = (uint8_t*)malloc(cartridge_ram_size);
-    assert(cartridge_ram != NULL); 
+
+    if(cartridge_ram_size > 0) {
+        cartridge_ram = (uint8_t*)malloc(cartridge_ram_size);
+        assert(cartridge_ram != NULL); 
+    } else {
+        printf("skipping allocation of cartridge ram\n");
+    }
 
     /* TYPE */
     

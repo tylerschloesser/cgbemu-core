@@ -51,36 +51,6 @@ u8 IME; /* interrupt master enable flag */
 u8 mbc_control[4];
 
 static bool memory_initialized = false;
-//static bool memory_debugger_enabled = false;
-/*
-static Debugger *debugger = NULL;
-*/
-
-/*
-void set_memory_debugger_enabled( bool value ) {
-#ifdef DEBUG
-    char *val_str = (value ? "TRUE" : "FALSE");
-    printf("memory_debugger_enabled set to %s\n", val_str);
-#endif
-    memory_debugger_enabled = value;
-}
-*/
-
-/*TEMPTEMPTEMPTEMPTEMPTE*/
-void dump_memory() {
-    FILE *dump = fopen("ram_dump.bin", "wb");
-    fwrite(gameboy_ram,1, GAMEBOY_RAM_SIZE, dump);
-    fclose(dump);
-    
-    dump = fopen("zero_page_dump.bin", "wb");
-    fwrite(zero_page,1, 0x7F, dump);
-    fclose(dump);
-    
-    dump = fopen("hardware_registers_dump.bin", "wb");
-    fwrite(hardware_registers,1, 0x80, dump);
-    fclose(dump);
-    
-}
 
 void initialize_memory( void ) 
 {
@@ -126,6 +96,15 @@ void initialize_memory( void )
     
 	hardware_registers[SVBK] = 1; /* selected ram bank should never be 0 */
 	hardware_registers[BLCK] = 0; /* enable bios */
+
+    hardware_registers[VBK] = 0;
+    update_selected_gameboy_vram_bank();
+    update_selected_gameboy_ram_bank();
+    update_selected_cartridge_ram_bank();
+    update_selected_cartridge_rom_bank();
+
+
+
     //fprintf(stderr, "disabling bios!\n");
     //hardware_registers[BLCK] = 0x11; /* enable bios */
 	
@@ -144,96 +123,211 @@ void reinitialize_memory( void )
 	initialize_memory();
 }
 
+void mbc0_write(uint16_t location, uint8_t data);
+uint8_t mbc0_read(uint16_t location);
+void mbc1_write(uint16_t location, uint8_t data);
+uint8_t mbc1_read(uint16_t location);
+void mbc2_write(uint16_t location, uint8_t data);
+uint8_t mbc2_read(uint16_t location);
+void mbc3_write(uint16_t location, uint8_t data);
+uint8_t mbc3_read(uint16_t location);
+void mbc4_write(uint16_t location, uint8_t data);
+uint8_t mbc4_read(uint16_t location);
+void mbc5_write(uint16_t location, uint8_t data);
+uint8_t mbc5_read(uint16_t location);
+
+uint8_t* selected_cartridge_rom_bank = NULL;
+uint8_t* selected_cartridge_ram_bank = NULL;
+uint8_t* selected_gameboy_vram_bank = NULL;
+uint8_t* selected_gameboy_ram_bank = NULL;
+
+void mbc0_write(uint16_t location, uint8_t data) {
+           
+}
+
+uint8_t mbc0_read(uint16_t location) {
+
+}
+
+void mbc1_write(uint16_t location, uint8_t data) {
+
+}
+
+uint8_t mbc1_read(uint16_t location) {
+}
+
+void mbc2_write(uint16_t location, uint8_t data) {
+
+}
+
+uint8_t mbc2_read(uint16_t location) {
+
+}
+
+void mbc3_write(uint16_t location, uint8_t data) {
+
+}
+
+uint8_t mbc3_read(uint16_t location) {
+
+}
+
+void mbc4_write(uint16_t location, uint8_t data) {
+
+}
+
+uint8_t mbc4_read(uint16_t location) {
+
+}
+
+void update_selected_cartridge_rom_bank() {
+    u32 rom_bank = mbc_control[ROM_BANK_LOW];
+    rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
+
+    /* TODO this should only happen in MBC1 (i think) */
+
+    if(rom_bank == 0)
+        rom_bank = 1;
+
+    selected_cartridge_rom_bank = 
+        &cartridge_rom[rom_bank * 0x4000];
+}
+
+void update_selected_cartridge_ram_bank() {
+    u32 ram_bank = mbc_control[RAM_BANK];
+
+    selected_cartridge_ram_bank = 
+        &cartridge_ram[ram_bank * 0x2000];
+}
+
+void update_selected_gameboy_ram_bank() {
+
+    u32 ram_bank = hardware_registers[SVBK];
+    selected_gameboy_ram_bank = &gameboy_ram[ram_bank * 0x1000];
+
+}
+
+void update_selected_gameboy_vram_bank() {
+    u32 vram_bank = hardware_registers[VBK];
+
+    selected_gameboy_vram_bank = 
+        &gameboy_vram[vram_bank * 0x2000];
+}
+
+
+void mbc5_write(uint16_t location, uint8_t data) {
+    uint8_t location_hi = ((location & 0xF000) >> 12);
+    switch(location_hi) {
+        case 0x0:
+        case 0x1:
+            mbc_control[RAM_ENABLE] = data;
+            break;
+        case 0x2:
+            mbc_control[ROM_BANK_LOW] = data;
+            update_selected_cartridge_rom_bank();
+            break;
+        case 0x3:
+            mbc_control[ROM_BANK_HIGH] = (data & 0x1);
+            update_selected_cartridge_rom_bank();
+            break;
+        case 0x4:
+        case 0x5:
+            mbc_control[RAM_BANK] = data;
+            update_selected_cartridge_ram_bank();
+            break;
+        case 0x6:
+        case 0x7:
+            break;
+        case 0x8:
+        case 0x9:
+            location &= 0x1FFF;
+            selected_gameboy_vram_bank[location] = data;
+            break;
+        case 0xA:
+        case 0xB:
+            //TODO do something different here...
+            assert(mbc_control[RAM_ENABLE] != 0);
+
+            location &= 0x1FFF;
+            selected_cartridge_ram_bank[location] = data;
+            break;
+        case 0xC:
+            location &= 0x0FFF;
+            gameboy_ram[location] = data;
+            break;
+        case 0xD:
+            location &= 0x0FFF;
+            selected_gameboy_ram_bank[location] = data;
+            break;
+
+
+
+    }
+}
+
+uint8_t mbc5_read(uint16_t location) {
+    uint8_t location_hi = ((location & 0xF000) >> 12);
+    switch(location_hi) {
+        case 0x0:
+        case 0x1:
+        case 0x2:
+        case 0x3:
+        {
+            location &= 0x3FFF; /* ~0xC000 */
+
+            //HAXXY HAX
+            if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
+                return bios[location];
+
+            return cartridge_rom[location];
+        }
+        case 0x4: 
+        case 0x5:
+        case 0x6:
+        case 0x7:
+            location &= 0x3FFF;
+            return selected_cartridge_rom_bank[location]; 
+        case 0x8:
+        case 0x9:
+            location &= 0x1FFF; /* ~0xE000 */
+            return selected_gameboy_vram_bank[location];
+        case 0xA:
+        case 0xB:
+            location &= 0x1FFF;
+            return selected_cartridge_ram_bank[location];
+        case 0xC:
+            location &= 0x0FFF; /* ~0xF000 */
+            return gameboy_ram[location];
+        case 0xD:
+            location &= 0x0FFF;
+            return selected_gameboy_ram_bank[location];
+    }
+             
+
+}
+
+
+
+
+
+
+void write_memory(uint16_t location, uint8_t data) {
+    
+
+
+}
+
+
+
+
 void MBC_write(u16 location, u8 data)
 {
 	assert( memory_initialized == true );
 
-    /*
-    if( memory_debugger_enabled ) {
-        debug_MBC_write(location, data);
-    } 
-    */
-	
-	/*
-    if( debugger != NULL ) {
-        debugger->debug_write( location, data );
+    if(location < 0xE000) {
+        mbc5_write(location, data);
+        return;
     }
-	*/
-    
-    if( location < 0x2000 ) 
-	{ 
-		/* 0000-1FFF external RAM bank enable */
-        mbc_control[RAM_ENABLE] = data;
-    }
-	else if( location < 0x3000 ) 
-	{
-        /* 2000-2FFF ROM bank select LSB */
-        mbc_control[ROM_BANK_LOW] = data;
-    }
-	else if( location < 0x4000 ) 
-	{
-        /* 3000-3FFF ROM bank select MSB */
-		//assert( data == 0 || data == 1 );
-		
-        if(data != 0 || data != 1) {
-            fprintf(stderr,"invalid ROM bank select MSB value\n");
-            return;
-        }
-		
-		data = data & 0x01;
-        mbc_control[ROM_BANK_HIGH] = data;
-    }
-	else if( location < 0x6000 ) 
-	{
-        /* 4000-5FFF external RAM bank select */
-        mbc_control[RAM_BANK] = data;
-    }
-	else if( location < 0x8000 ) 
-	{
-        /* 6000-7FFF RAM/ROM select (only in mbc1) */
-		//fprintf( stderr, "invalid write: location=%X\tdata=%X\n", location, data );
-    }
-	else if( location < 0xA000 ) 
-	{
-		/* 8000-9FFF VRAM */
-		u16 vram_bank = hardware_registers[VBK];
-		assert( vram_bank == 0 || vram_bank == 1 );
-		u32 offset = 0x8000 - ( vram_bank * 0x2000 );
-		u32 vram_location = location - offset;
-		gameboy_vram[vram_location] = data;
-	}
-	else if( location < 0xC000 ) 
-	{
-		/* A000-BFFF switchable cartridge RAM */
-		if(mbc_control[RAM_ENABLE] == 0) {
-			assert( false );
-			return;		
-		}
-		u32 offset = 0xA000;
-		u32 ram_bank = mbc_control[RAM_BANK];
-		u32 ram_location = ( ram_bank * 0x2000 ) + location - offset;
-        
-        if(ram_location >= cartridge_ram_size) {
-            return;
-        }
-		cartridge_ram[ram_location] = data;
-	}
-	else if( location < 0xD000 ) 
-	{
-		/* C000-CFFF internal RAM bank 0 */
-		u32 offset = 0xC000;
-		u32 ram_location = location - offset;
-		gameboy_ram[ram_location] = data;
-	}
-	else if( location < 0xE000 ) 
-	{
-		/* D000-DFFF internal RAM bank 1-7 */
-		int offset = 0xD000;
-		u32 ram_bank = hardware_registers[SVBK];
-		assert(ram_bank>0);
-		u32 ram_location = ( ram_bank * 0x1000 ) + location - offset;
-		gameboy_ram[ram_location] = data;
-    } 
 	else if(location < 0x10000) /* E000-FFFF */
 	{
         if(location < 0xFE00) 
@@ -334,6 +428,7 @@ void MBC_write(u16 location, u8 data)
 							cpu_set_timer_countr( timer_counter );
 						}
 					}
+                    break;
 				}	
 				case SVBK: 
 				{
@@ -342,8 +437,16 @@ void MBC_write(u16 location, u8 data)
 					if(data == 0) {
 						data = 1;
 					}
-					break;
+                    hardware_registers[SVBK] = data;
+                    update_selected_gameboy_ram_bank();
+                    return;
 				}
+                case VBK:
+                {
+                    hardware_registers[VBK] = data;
+                    update_selected_gameboy_vram_bank();
+                    return;
+                }
 				case BCPD:
 				{
 					/* background pallete data */
@@ -404,92 +507,14 @@ void MBC_write(u16 location, u8 data)
     }
 }
 
-u8 MBC_read(u16 location)
-{
+u8 MBC_read(u16 location) {
+
 	assert( memory_initialized == true );
-    if(in_bios ==false) {
-           //printf("reading %X\n", location);
+
+    if(location < 0xE000) {
+        return mbc5_read(location);
     }
-	
-    /*
-    if( memory_debugger_enabled ) {
-        debug_MBC_read(location);
-    } 
-    */
-	/*
-    if( debugger != NULL ) {
-        debugger->debug_read( location );
-    } 
-*/	
-    
-    if( location < 0x4000 ) 
-	{
-		/* 0000-3FFF ROM bank 0 */
-		//if( hardware_registers[BLCK] != 0x11 ) 
-        if(in_bios)
-		{
-            /* BIOS is enabled */
-            if( location < 0x100 || ( location > 0x1FF && location < 0x900 ) )
-            //if(location < 0x100)
-            {
-                return bios[location];
-            }
-		}
-        return cartridge_rom[location];
-    } 
-	else if(location < 0x8000) 
-	{
-		/* 4000-7FFF ROM bank 0 to n */
-        u32 rom_bank = mbc_control[ROM_BANK_LOW];
-        rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
-        if(rom_bank == 0) rom_bank = 1;  //TODO temp
-        //TODO FIX THIS
-        // this is not correct. for MBC1 rom bank 0 is actually rom
-        //bank 1 in this region 
-        u32 rom_location = ( rom_bank * 0x4000 ) + ( location - 0x4000 );
-        //printf("rom_location = %x\n", rom_location);
-		return cartridge_rom[rom_location];
-    } 
-	else if (location < 0xA000) 
-	{
-        /* 8000-9FFF VRAM */
-		u8 vram_bank = hardware_registers[VBK];
-		//assert( vram_bank == 0 && vram_bank == 1 );
-		u32 offset = 0x8000 - (vram_bank * 0x2000);
-		u32 vram_location = location - offset;
-		return gameboy_vram[vram_location];	
-    } 
-	else if (location < 0xC000) 
-	{
-		/* A000-BFFF switchable cartridge RAM */
-		if(mbc_control[RAM_ENABLE] == 0) 
-		{
-			//printf( "attempted to read from disabled ram\n");
-			//exit( EXIT_FAILURE );
-            //fatal_error();
-            return 0;
-		}
-		u32 offset = 0xA000;
-        u32 ram_bank = mbc_control[RAM_BANK];
-        u32 ram_location = ( ram_bank * 0x2000 ) + location - offset;
-		return cartridge_ram[ram_location];
-    }
-	else if (location < 0xD000) 
-	{
-		/* C000-CFFF internal RAM bank 0 */
-        int offset = 0xC000;
-        int ram_location = location - offset;
-		return gameboy_ram[ram_location];
-    }
-	else if (location < 0xE000) 
-	{
-		/* D000-DFFF internal RAM bank 1-7 */
-        int offset = 0xD000;
-        u32 ram_bank = hardware_registers[SVBK];
-        u32 ram_location = ram_bank * 0x1000 + location - offset;
-		return gameboy_ram[ram_location];
-    } 
-	else if (location < 0x10000) /* E000-FFFF */
+   	else if (location < 0x10000) /* E000-FFFF */
 	{
         if(location < 0xFE00) 
 		{
@@ -544,21 +569,3 @@ u8 MBC_read(u16 location)
 	return 0;
 }
 
-/*
-void memory_attach_debugger( Debugger *_debugger)
-{
-   assert( debugger == NULL ); 
-   assert( _debugger != NULL );
-
-   debugger = _debugger;
-}
-
-Debugger *memory_detach_debugger( void )
-{
-    assert( debugger != NULL );
-    Debugger *_debugger = debugger;
-
-    debugger = NULL;
-    return _debugger;
-}
-*/
