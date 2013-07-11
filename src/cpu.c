@@ -45,8 +45,8 @@
 #define LO B.L
 
 /* memory access functions */
-#define READ(S) MBC_read(S)
-#define WRITE(D, B) MBC_write(D, B)
+#define READ(S) read_memory(S)
+#define WRITE(D, B) write_memory(D, B)
 
 /* behavior at the end of each instruction */
 #define CLOCK_CYCLES(x) return(x)
@@ -1222,8 +1222,8 @@ static void service_interrupts()
 		if( serviced_interrupt == true ) {
 			assert( interrupt_address != 0 );
 			
-			MBC_write( --SP.W, PC.B.H );
-			MBC_write( --SP.W, PC.B.L );
+			WRITE( --SP.W, PC.B.H );
+			WRITE( --SP.W, PC.B.L );
 			
 			IME = 0;
 			PC.W = interrupt_address;
@@ -1236,8 +1236,8 @@ void print_cpu_state()
 {
 	
 	printf("AF=%04X\tBC=%04X\tDE=%04X\tHL=%04X\tSP=%04X\tPC=%04X\t(%s)\n",\
-	AF.W, BC.W, DE.W, HL.W, SP.W, PC.W, opcode[MBC_read(PC.W)]);
-    printf("TIMA=%X\n", MBC_read(0xFF05));
+	AF.W, BC.W, DE.W, HL.W, SP.W, PC.W, opcode[READ(PC.W)]);
+    printf("TIMA=%X\n", READ(0xFF05));
 \
 	//TEMPORARY
 	/*
@@ -1266,7 +1266,7 @@ static int execute() {
 		/* execute NOP instructions while waiting for interrupt */
         IR.W = 0x00;
     } else {
-        IR.W = MBC_read(PC.W++);	
+        IR.W = READ(PC.W++);	
     }
 
 	/* execute the instruction and return cpu cycles */

@@ -14,6 +14,9 @@
 extern int cartridge_ram_size;
 extern int cartridge_rom_size;
 
+extern uint8_t (*read_memory)(uint16_t);
+extern void (*write_memory)(uint16_t, uint8_t);
+
 //TODO TEMP
 bool in_bios;
 
@@ -169,7 +172,7 @@ void memory_attach_debugger( Debugger* );
 Debugger *memory_detach_debugger( void );
 */
 
-void MBC_write(u16 location, u8 data);
-u8 MBC_read(u16 location);
+//void MBC_write(u16 location, u8 data);
+//u8 MBC_read(u16 location);
 
 #endif // MEMORY_H_INCLUDED

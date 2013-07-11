@@ -52,9 +52,18 @@ u8 mbc_control[4];
 
 static bool memory_initialized = false;
 
+uint8_t MBC_read(uint16_t location);
+void MBC_write(uint16_t location, uint8_t data);
+
+uint8_t (*read_memory)(uint16_t);
+void (*write_memory)(uint16_t, uint8_t);
+
 void initialize_memory( void ) 
 {
 	assert( memory_initialized == false );
+
+    write_memory = &MBC_write;
+    read_memory = &MBC_read;
 
 	printf("CLEARING ALL MEMORY\n");
 	int i;
@@ -308,19 +317,19 @@ uint8_t mbc5_read(uint16_t location) {
 
 
 
+/*
+void common_write(u16 location, u8 data) {
+
+    if(location < 0xFE00) {
+        
+    } else if(location < 0xFEA0) {
+
+    }
+
+*/
 
 
-
-void write_memory(uint16_t location, uint8_t data) {
-    
-
-
-}
-
-
-
-
-void MBC_write(u16 location, u8 data)
+void MBC_write(uint16_t location, uint8_t data)
 {
 	assert( memory_initialized == true );
 
@@ -379,7 +388,7 @@ void MBC_write(u16 location, u8 data)
 
 					int i;
 					for(i = 0; i < dma_transfer_length; ++i) {
-							MBC_write(dma_destination + i, MBC_read(dma_source + i));
+							write_memory(dma_destination + i, read_memory(dma_source + i));
 					}
 					/* indicate that the DMA transfer is inactive */
 					hardware_registers[HDMA5] |= 0x80;
@@ -391,7 +400,7 @@ void MBC_write(u16 location, u8 data)
 					int dma_source = data << 8;
 					int i;
 					for(i = 0; i < 0xA0; ++i) {
-							MBC_write(0xFE00 + i, MBC_read(dma_source + i));
+							write_memory(0xFE00 + i, read_memory(dma_source + i));
 					}
 					return;
 				}
@@ -507,7 +516,7 @@ void MBC_write(u16 location, u8 data)
     }
 }
 
-u8 MBC_read(u16 location) {
+uint8_t MBC_read(uint16_t location) {
 
 	assert( memory_initialized == true );
 
@@ -519,7 +528,7 @@ u8 MBC_read(u16 location) {
         if(location < 0xFE00) 
 		{
             /* E000-FDFF Echo RAM (maps to C000-DDFF) */
-			return MBC_read( location - 0x2000 );	
+			return read_memory( location - 0x2000 );	
         } 
 		else if(location < 0xFEA0) 
 		{
