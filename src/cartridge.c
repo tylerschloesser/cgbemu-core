@@ -117,7 +117,7 @@ int load_cartridge(const uint8_t* buffer, int size) {
     /* Cartridge RAM */
     cartridge_ram_size = get_cartridge_ram_size(cartridge_rom[0x0149]);
     //TODO handle errors
-    assert(cartridge_ram_size > 0);
+    assert(cartridge_ram_size >= 0);
     assert(cartridge_ram == NULL);
     cartridge_ram = (uint8_t*)malloc(cartridge_ram_size);
     assert(cartridge_ram != NULL); 
