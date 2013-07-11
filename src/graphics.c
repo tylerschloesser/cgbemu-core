@@ -24,6 +24,10 @@ static SDL_mutex* vram_mutex = NULL;
 
 uint8_t scanline_bg_priority[160];
 
+/* for CGB sprite priority
+TODO handle regular gb sprite priority */
+uint8_t scanline_obj_priority[160];
+
 static bool graphics_initialized = false;
 
 static void lock_vram()
@@ -245,7 +249,7 @@ int render_background(u8 lcd_control)
 		}
 		*/
 		
-		scanline_bg_priority[x_pixel] = high || low; // checks whether high and low are 0
+		scanline_bg_priority[x_pixel] = high || low; // checks whether high or low are 0
 		
 		update_screen_buffer( scanline, x_pixel, pallete_entry );
 		
@@ -254,6 +258,9 @@ int render_background(u8 lcd_control)
 
 // only renders sprites on the current scanline
 int render_sprites() {
+
+//TODO
+    memset(scanline_obj_priority, 0, 160);
 
 	assert( graphics_initialized == true );
 
@@ -367,6 +374,10 @@ int render_sprites() {
 				if(scanline < 0 || scanline > 143 || x_pixel < 0 || x_pixel > 159) {
 					continue;
 				}
+
+                /* TODO find a btter way of doing this */
+                if(scanline_obj_priority[x_pixel]) continue;
+                scanline_obj_priority[x_pixel] = 1;
 				
 				/*TODO find a better way of doing this */
 				if(!priority || !(scanline_bg_priority[x_pixel]))

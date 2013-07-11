@@ -77,7 +77,28 @@ CartridgeType cartridge_types[] = {
     { 0xFF, false, "HUC1+RAM+BATTERY", HUC1_RAM_BATTERY }
 };
 
+bool has_battery = false;
 
+void set_has_battery(CartridgeType* cartridge_type) {
+    assert(cartridge_type != NULL);
+    switch(cartridge_type->id) {
+        case MBC1_RAM_BATTERY:
+        case MBC2_BATTERY:
+        case ROM_RAM_BATTERY:
+        case MMM01_RAM_BATTERY:
+        case MBC3_TIMER_BATTERY:
+        case MBC3_TIMER_RAM_BATTERY:
+        case MBC3_RAM_BATTERY:
+        case MBC4_RAM_BATTERY:
+        case MBC5_RAM_BATTERY:
+        case MBC5_RUMBLE_RAM_BATTERY:
+        case HUC1_RAM_BATTERY:
+            has_battery = true;
+            printf("cartridge has battery\n");
+            return;
+    }
+    has_battery = false;
+}
 
 CartridgeType* cartridge_type = NULL;
 
@@ -132,6 +153,9 @@ int load_cartridge(const uint8_t* buffer, int size) {
     //TODO handle errors
     assert(cartridge_type != NULL);
     printf("cartridge type: %s\n", cartridge_type->name);
+
+
+    set_has_battery(cartridge_type);
 
     printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
             cartridge_ram_size / 1024, size / 1024);

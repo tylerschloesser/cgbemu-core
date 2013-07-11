@@ -19,8 +19,8 @@ static int image_height = 144;
 
 uint16_t frame[FRAME_HEIGHT][FRAME_WIDTH];
 
-int window_width = 500;
-int window_height = 500;
+int window_width = 200;
+int window_height = 200;
 
 static GLuint texture = 0;
 

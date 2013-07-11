@@ -45,6 +45,12 @@ void MBC_write(uint16_t location, uint8_t data);
 uint8_t (*read_memory)(uint16_t);
 void (*write_memory)(uint16_t, uint8_t);
 
+
+void update_selected_cartridge_rom_bank();
+void update_selected_cartridge_ram_bank();
+void update_selected_gameboy_ram_bank();
+void update_selected_gameboy_vram_bank();
+
 void initialize_memory( void ) 
 {
 	assert( memory_initialized == false );
@@ -98,14 +104,8 @@ void initialize_memory( void )
     update_selected_gameboy_ram_bank();
     update_selected_cartridge_ram_bank();
     update_selected_cartridge_rom_bank();
-
-
-
-    //fprintf(stderr, "disabling bios!\n");
-    //hardware_registers[BLCK] = 0x11; /* enable bios */
 	
 	memory_initialized = true;
-	
 }
 
 //TODO temporary
