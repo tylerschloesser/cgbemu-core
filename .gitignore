@@ -6,4 +6,4 @@ src/test
 *.o
 src/bios/
 src/test
-
+src/save_state.bin
