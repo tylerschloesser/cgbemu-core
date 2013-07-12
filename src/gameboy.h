@@ -32,5 +32,11 @@ void gameboy_toggle_button( Button button, bool pressed );
 //TODO
 int get_save_state_size();
 
+typedef enum {
+    CGB, /* gameboy color */
+    MGB, /* gameboy pocket */
+    DMG, /* gameboy */
+} GameboyModel;
+
 
 #endif // GAMEBOY_H_

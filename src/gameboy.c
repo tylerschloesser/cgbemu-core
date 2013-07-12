@@ -83,7 +83,7 @@ int get_save_state_size() {
     save_state_size += GAMEBOY_RAM_SIZE;
     save_state_size += GAMEBOY_VRAM_SIZE;
     save_state_size += GAMEBOY_OAM_SIZE;
-    save_state_size += BIOS_SIZE;
+    save_state_size += GAMEBOY_BIOS_SIZE;
     save_state_size += 0x7F; //zero page
     save_state_size += 1; //interrupt enabled
     save_state_size += 0x80; //hardware registers
@@ -125,7 +125,7 @@ void save_state(uint8_t** buffer) {
     memcpy_id(buffer, gameboy_ram, GAMEBOY_RAM_SIZE);
     memcpy_id(buffer, gameboy_vram, GAMEBOY_VRAM_SIZE);
     memcpy_id(buffer, gameboy_oam, GAMEBOY_OAM_SIZE);
-    memcpy_id(buffer, bios, BIOS_SIZE);
+    memcpy_id(buffer, gameboy_bios, GAMEBOY_BIOS_SIZE);
     memcpy_id(buffer, zero_page, 0x7F);
     memcpy_id(buffer, &interrupt_enable, 1);
     memcpy_id(buffer, hardware_registers, 0x80);
@@ -153,7 +153,7 @@ void load_state(uint8_t* buffer, int size) {
     memcpy_is(gameboy_ram, &buffer, GAMEBOY_RAM_SIZE);
     memcpy_is(gameboy_vram, &buffer, GAMEBOY_VRAM_SIZE);
     memcpy_is(gameboy_oam, &buffer, GAMEBOY_OAM_SIZE);
-    memcpy_is(bios, &buffer, BIOS_SIZE);
+    memcpy_is(gameboy_bios, &buffer, GAMEBOY_BIOS_SIZE);
     memcpy_is(zero_page, &buffer, 0x7F);
     memcpy_is(&interrupt_enable, &buffer, 1);
     memcpy_is(hardware_registers, &buffer, 0x80);

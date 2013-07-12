@@ -807,21 +807,9 @@ void change_emulator_state( EmulatorState new_state ) {
 	*/
 }
 
-void print_bios_checksum()
-{
-	int i;
-	int checksum = 0;
-	for(i = 0; i < BIOS_SIZE; ++i) {
-		checksum += bios[i];
-	}
-	printf("checksum = %X\n", checksum);
-}
-
 void initialize_cpu()
 {
 	assert( cpu_initialized == false );
-
-	print_bios_checksum();
 	
     /*
 	if( QueryPerformanceFrequency( (LARGE_INTEGER*)&freq ) == FALSE ) {

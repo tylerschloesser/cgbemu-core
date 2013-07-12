@@ -3,13 +3,15 @@
 
 #include "globals.h"
 #include "debug.h"
+#include "gameboy.h"
 //temp
 #include "cpu.h"
 
 #define GAMEBOY_RAM_SIZE 0x8000
 #define GAMEBOY_VRAM_SIZE 0x4000
 #define GAMEBOY_OAM_SIZE 0x20000  //128KB
-#define BIOS_SIZE 0x900
+
+#define GAMEBOY_BIOS_SIZE 0x900
 
 extern int cartridge_ram_size;
 extern int cartridge_rom_size;
@@ -29,16 +31,6 @@ enum MBC_control {
     RAM_BANK
 };
 
-/*
-typedef enum MBC_type
-{
-    MBC1,
-    MBC2,
-    MBC3,
-    MBC4,
-    MBC5
-};
-*/
 enum hardware_register {
     P1      = 0x00, //read joypad info
     SB      = 0x01, //serial transfer data
@@ -109,28 +101,19 @@ enum hardware_register {
 };
 
 
-
-//struct MBC
-//{
-    //MBC_type type = MBC5;
-
-    //bool in_bios = true;
-
-//extern u8 cartridge_ram[CARTRIDGE_RAM_SIZE];
 extern uint8_t* cartridge_ram;
 extern uint8_t* cartridge_rom;
-//extern u8 cartridge_rom[CARTRIDGE_ROM_SIZE];
 
 extern u8 pallete[0x40]; //8 palletes - 4 colors per pallete - 2 bytes per color
 extern u8 sprite_pallete[0x40];
-//64
 
-extern u8 gameboy_ram[GAMEBOY_RAM_SIZE];
-extern u8 gameboy_vram[GAMEBOY_VRAM_SIZE];
-//vram vram_bank0, vram_bank1;
-extern u8 gameboy_oam[GAMEBOY_OAM_SIZE];
+extern uint8_t* gameboy_ram;
+extern uint8_t* gameboy_vram;
+extern uint8_t* gameboy_oam;
+extern uint8_t* gameboy_bios;
 
-extern u8 bios[BIOS_SIZE];
+//extern u8 bios[BIOS_SIZE];
+
 
 extern u8 zero_page[0x7F];             //127B
 extern u8 interrupt_enable;
@@ -139,9 +122,6 @@ extern u8 hardware_registers[0x80];    //128B
 extern u8 IME;							//Interrupt Master Enable Flag (used by EI, DI, RETI, <INT>)
 	
 extern u8 mbc_control[4];
-
-//} MBC5;
-
 
 enum lcd_control {
 	LCD_DISPLAY_ENABLE = 0x80,
@@ -163,18 +143,7 @@ enum bg_map_attributes {
 };
 
 
-//struct MBC MBC5;
-
-void initialize_memory( void );
-void reinitialize_memory( void );
-
-/*
-//void set_memory_debugger_enabled( bool value );
-void memory_attach_debugger( Debugger* );
-Debugger *memory_detach_debugger( void );
-*/
-
-//void MBC_write(u16 location, u8 data);
-//u8 MBC_read(u16 location);
+void initialize_memory();
+void reinitialize_memory();
 
 #endif // MEMORY_H_INCLUDED

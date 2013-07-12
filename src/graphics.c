@@ -16,12 +16,6 @@
 static int render_background(u8 lcd_control);
 static int render_sprites();
 
-/*
-SDL_Surface *surface = NULL;
-
-static SDL_mutex* vram_mutex = NULL;
-*/
-
 uint8_t scanline_bg_priority[160];
 
 /* for CGB sprite priority
@@ -30,37 +24,9 @@ uint8_t scanline_obj_priority[160];
 
 static bool graphics_initialized = false;
 
-static void lock_vram()
-{
-/*
-	if( SDL_mutexP( vram_mutex ) < 0 ) {
-		fprintf( stderr, "unable to lock mutex: %s\n", SDL_GetError() );
-		return;
-	}
-*/
-}
-
-static void unlock_vram() 
-{
-/*
-	if( SDL_mutexV( vram_mutex ) < 0 ) {
-		fprintf( stderr, "unable to unlock mutex: %s\n", SDL_GetError() );
-		return;
-	}
-*/
-}
-
 void initialize_graphics()
 {
 	assert( graphics_initialized == false );
-	
-	/*
-	vram_mutex = SDL_CreateMutex();
-	if( vram_mutex == NULL ) {
-		fprintf( stderr, "failed to create mutex: %s\n", SDL_GetError() );
-		return;
-	}
-	*/
 	
 	graphics_initialized = true;
 }
@@ -68,11 +34,7 @@ void initialize_graphics()
 void reinitialize_graphics()
 {
 	assert( graphics_initialized == true );
-	
-	/*
-	SDL_DestroyMutex( vram_mutex );
-	*/
-	
+
 	graphics_initialized = false;
 	initialize_graphics();
 }
@@ -81,7 +43,6 @@ int render_scanline()
 {
 	assert( graphics_initialized == true );
 	
-	lock_vram();
 	
 	u8 lcd_control = hardware_registers[LCDC];
 
@@ -93,7 +54,6 @@ int render_scanline()
 		render_sprites();
 	}
 	
-	unlock_vram();
 }
 
 int render_background(u8 lcd_control)
@@ -109,9 +69,6 @@ int render_background(u8 lcd_control)
 	
 	u8 scanline = hardware_registers[LY];
 
-    //TODO temp
-    //scanline -= 1;
-	
 	u8 scroll_y = hardware_registers[SCY];
 	u8 scroll_x = hardware_registers[SCX];
 	

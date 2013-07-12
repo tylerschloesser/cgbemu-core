@@ -2,6 +2,7 @@
 
 #include "joypad.h"
 
+
 #define INVALID_WRITE( location )															\
 			/*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/ 	\
 			return
@@ -22,11 +23,12 @@ uint8_t* cartridge_ram = NULL;
 u8 pallete[PALLETE_SIZE];
 u8 sprite_pallete[SPRITE_PALLETE_SIZE];
 
-u8 gameboy_ram[GAMEBOY_RAM_SIZE];
-u8 gameboy_vram[GAMEBOY_VRAM_SIZE];
-u8 gameboy_oam[GAMEBOY_OAM_SIZE];
+uint8_t* gameboy_ram = NULL;
+uint8_t* gameboy_vram = NULL;
+uint8_t* gameboy_oam = NULL;
+uint8_t* gameboy_bios = NULL;
 
-u8 bios[BIOS_SIZE];
+//u8 bios[BIOS_SIZE];
 
 u8 zero_page[0x7F];             //127B
 u8 interrupt_enable;
@@ -59,33 +61,31 @@ void update_all_selected_banks() {
 }
 
 
-void initialize_memory( void ) 
+void initialize_memory(GameboyModel model) 
 {
 	assert( memory_initialized == false );
 
+    assert(gameboy_ram == NULL);
+    assert(gameboy_vram == NULL);
+    assert(gameboy_oam == NULL);
+    assert(gameboy_bios == NULL);
+
+    gameboy_ram = (uint8_t*)calloc(GAMEBOY_RAM_SIZE, 1);
+    gameboy_vram = (uint8_t*)calloc(GAMEBOY_VRAM_SIZE, 1);
+    gameboy_oam = (uint8_t*)calloc(GAMEBOY_OAM_SIZE, 1);
+    gameboy_bios = (uint8_t*)calloc(GAMEBOY_BIOS_SIZE, 1);
+
+    assert(gameboy_ram != NULL);
+    assert(gameboy_vram != NULL);
+    assert(gameboy_oam != NULL);
+    assert(gameboy_bios != NULL);
+
+
     write_memory = &MBC_write;
     read_memory = &MBC_read;
-
-	printf("CLEARING ALL MEMORY\n");
-	int i;
-
-	for(i = 0; i < GAMEBOY_RAM_SIZE; ++i) {
-		gameboy_ram[i] = 0;
-	}
-	for(i = 0; i < GAMEBOY_VRAM_SIZE; ++i) {
-		gameboy_vram[i] = 0;
-	}
-	for(i = 0; i < GAMEBOY_OAM_SIZE; ++i) {
-		gameboy_oam[i] = 0;
-	}
-	
-	printf("SKIPPING BIOS\n");
-	/*
-	for(i = 0; i < BIOS_SIZE; ++i) {
-		bios[i] = 0;
-	}
-	*/
+    
 	// get rid of all these numbers...
+    int i;
 	for(i = 0; i < 0x7F; ++i) {
 		zero_page[i] = 0;
 	}
@@ -117,11 +117,11 @@ void initialize_memory( void )
 bool in_bios = true;
 //i have yet to figure out the dif between cgb and gb bios
 
-void reinitialize_memory( void )
+void reinitialize_memory(GameboyModel model)
 {
 	assert( memory_initialized == true );
 	memory_initialized = false;
-	initialize_memory();
+	initialize_memory(model);
 }
 
 void mbc0_write(uint16_t location, uint8_t data);
@@ -433,7 +433,7 @@ uint8_t mbc5_read(uint16_t location) {
 
             //HAXXY HAX
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
-                return bios[location];
+                return gameboy_bios[location];
 
             return cartridge_rom[location];
         }
