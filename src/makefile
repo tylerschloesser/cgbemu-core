@@ -2,7 +2,7 @@
 SOURCES=android_interface.c cpu.c debug.c gameboy.c graphics.c joypad.c memory.c screen.c tools.c cartridge.c test.c
 OBJECTS=$(SOURCES:.c=.o)
 CC=gcc
-CFLAGS= -c
+CFLAGS= -c -O2
 LFLAGS= -lglut
 EXECUTABLE=test
 

@@ -214,7 +214,7 @@ int verify_cartridge() {
             expected_cartridge_rom_size / 1024);
 	
     /* CHECKSUM */
-	u32 sum;
+	u32 sum = 0;
 	for(i = 0; i < cartridge_rom_size; ++i) {
 		sum += cartridge_rom[i];
 	}

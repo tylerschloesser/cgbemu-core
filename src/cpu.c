@@ -1099,9 +1099,10 @@ static void update_lcd( u32 current_cycles )
 		scanline_counter -= current_cycles;
 		
 		if(scanline_counter <= 0) {
+            /* TODO verify that this works...
+               previously, the scanline was incremented immediately
 			/* increment the current scanline */
-			
-			++hardware_registers[LY];
+			//int scanline = hardware_registers[LY]++;
 			
 			/* reset the scanline counter */
 			scanline_counter = 456;
@@ -1109,6 +1110,8 @@ static void update_lcd( u32 current_cycles )
 			
 			
 			if(hardware_registers[LY] == 144) {
+            //if(scanline == 144) {
+
 				/* enter vertical blank period */
 				interrupt( VBLANK );
 				/*
@@ -1117,6 +1120,7 @@ static void update_lcd( u32 current_cycles )
 				
 	
 			} else if(hardware_registers[LY] > 153) {
+			//} else if(scanline > 153) {
 				/* scanline back to 0 (end of vertical blank) */
 				
 				/* TODO figure out a cleaner way to do this
@@ -1127,8 +1131,11 @@ static void update_lcd( u32 current_cycles )
 				hardware_registers[LY] = -1;
 				
 			} else if(hardware_registers[LY] < 144) {
+			//} else if(scanline < 144) {
 				render_scanline();
 			}
+            
+			++hardware_registers[LY];
 		}
 	}
 }

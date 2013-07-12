@@ -106,7 +106,7 @@ void idle(void)
 #ifdef _WIN32
 		Sleep(elapsed);
 #else
-        usleep(elapsed * 1000);
+        //usleep(elapsed * 1000);
         //fprintf(stderr, "sleeping for %i micro-seconds\n", elapsed);
         //usleep(elapsed);
 
@@ -167,6 +167,8 @@ void display(void)
 		GL_RGB,			/* format */
 		GL_UNSIGNED_SHORT_5_6_5,/* type */
 		pixels);		/* pixels */
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	
 	glBegin (GL_QUADS);
 	glTexCoord2f (0.0, 1.0); glVertex2f (-1.0, -1.0);

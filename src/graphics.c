@@ -108,6 +108,9 @@ int render_background(u8 lcd_control)
 	bool render_window;
 	
 	u8 scanline = hardware_registers[LY];
+
+    //TODO temp
+    //scanline -= 1;
 	
 	u8 scroll_y = hardware_registers[SCY];
 	u8 scroll_x = hardware_registers[SCX];
@@ -293,6 +296,8 @@ int render_sprites() {
         
 
         s16 scanline = hardware_registers[LY];
+        //TODO temp
+        //scanline -= 1;
         
 		u8 sprite_height = 8;
 		if(sprite_mode == SPRITE_MODE_8x16) {
