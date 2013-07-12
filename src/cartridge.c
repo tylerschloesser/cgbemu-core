@@ -4,36 +4,41 @@
 #include "memory.h"
 #include <string.h>
 
+#include "cartridge.h"
+
+Cartridge* cartridge = NULL;
+
+
 enum {
-    ROM_ONLY,
-    MBC1,
-    MBC1_RAM,
-    MBC1_RAM_BATTERY,
-    MBC2,
-    MBC2_BATTERY,
-    ROM_RAM,
-    ROM_RAM_BATTERY,
-    MMM01,
-    MMM01_RAM,
-    MMM01_RAM_BATTERY,
-    MBC3_TIMER_BATTERY,
-    MBC3_TIMER_RAM_BATTERY,
-    MBC3,
-    MBC3_RAM,
-    MBC3_RAM_BATTERY,
-    MBC4,
-    MBC4_RAM,
-    MBC4_RAM_BATTERY,
-    MBC5,
-    MBC5_RAM,
-    MBC5_RAM_BATTERY,
-    MBC5_RUMBLE,
-    MBC5_RUMBLE_RAM,
-    MBC5_RUMBLE_RAM_BATTERY,
-    POCKET_CAMERA,
-    BANDAI_TAMA5,
-    HUC3,
-    HUC1_RAM_BATTERY
+    ID_ROM_ONLY,
+    ID_MBC1,
+    ID_MBC1_RAM,
+    ID_MBC1_RAM_BATTERY,
+    ID_MBC2,
+    ID_MBC2_BATTERY,
+    ID_ROM_RAM,
+    ID_ROM_RAM_BATTERY,
+    ID_MMM01,
+    ID_MMM01_RAM,
+    ID_MMM01_RAM_BATTERY,
+    ID_MBC3_TIMER_BATTERY,
+    ID_MBC3_TIMER_RAM_BATTERY,
+    ID_MBC3,
+    ID_MBC3_RAM,
+    ID_MBC3_RAM_BATTERY,
+    ID_MBC4,
+    ID_MBC4_RAM,
+    ID_MBC4_RAM_BATTERY,
+    ID_MBC5,
+    ID_MBC5_RAM,
+    ID_MBC5_RAM_BATTERY,
+    ID_MBC5_RUMBLE,
+    ID_MBC5_RUMBLE_RAM,
+    ID_MBC5_RUMBLE_RAM_BATTERY,
+    ID_POCKET_CAMERA,
+    ID_BANDAI_TAMA5,
+    ID_HUC3,
+    ID_HUC1_RAM_BATTERY
 };
     
 
@@ -46,35 +51,35 @@ typedef struct {
     
 
 CartridgeType cartridge_types[] = {
-    { 0x00, true,  "ROM ONLY", ROM_ONLY},
-    { 0x01, false, "MBC1", MBC1},
-    { 0x02, false, "MBC1+RAM", MBC1_RAM}, 
-    { 0x03, false, "MBC1+RAM+BATTERY", MBC1_RAM_BATTERY },
-    { 0x05, false, "MBC2", MBC2 },
-    { 0x06, false, "MBC2+BATTERY", MBC2_BATTERY },
-    { 0x08, false, "ROM+RAM", ROM_RAM },
-    { 0x09, false, "ROM+RAM+BATTERY", ROM_RAM_BATTERY },
-    { 0x0B, false, "MMM01", MMM01 },
-    { 0x0C, false, "MMM01+RAM", MMM01_RAM },
-    { 0x0D, false, "MMM01+RAM_BATTERY", MMM01_RAM_BATTERY },
-    { 0x0F, false, "MBC3+TIMER+BATTERY", MBC3_TIMER_BATTERY },
-    { 0x10, false, "MBC3+TIMER+RAM+BATTERY", MBC3_TIMER_RAM_BATTERY },
-    { 0x11, false, "MBC3", MBC3 },
-    { 0x12, false, "MBC3+RAM", MBC3_RAM },
-    { 0x13, false, "MBC3+RAM+BATTERY", MBC3_RAM_BATTERY },
-    { 0x15, false, "MBC4", MBC4 },
-    { 0x16, false, "MBC4+RAM", MBC4_RAM },
-    { 0x17, false, "MBC4+RAM+BATTERY", MBC4_RAM_BATTERY },
-    { 0x19, false, "MBC5", MBC5 },
-    { 0x1A, false, "MBC5+RAM", MBC5_RAM },
-    { 0x1B, false, "MBC5+RAM+BATTERY", MBC5_RAM_BATTERY },
-    { 0x1C, false, "MBC5+RUMBLE", MBC5_RUMBLE },
-    { 0x1D, false, "MBC5+RUMBLE+RAM", MBC5_RUMBLE_RAM },
-    { 0x1E, false, "MBC5+RUMBLE+RAM+BATTERY", MBC5_RUMBLE_RAM_BATTERY },
-    { 0xFC, false, "POCKET CAMERA", POCKET_CAMERA },
-    { 0xFD, false, "BANDAI TAMA5", BANDAI_TAMA5 },
-    { 0xFE, false, "HUC3", HUC3 },
-    { 0xFF, false, "HUC1+RAM+BATTERY", HUC1_RAM_BATTERY }
+    { 0x00, true,  "ROM ONLY", ID_ROM_ONLY},
+    { 0x01, false, "MBC1", ID_MBC1},
+    { 0x02, false, "MBC1+RAM", ID_MBC1_RAM}, 
+    { 0x03, false, "MBC1+RAM+BATTERY", ID_MBC1_RAM_BATTERY },
+    { 0x05, false, "MBC2", ID_MBC2 },
+    { 0x06, false, "MBC2+BATTERY", ID_MBC2_BATTERY },
+    { 0x08, false, "ROM+RAM", ID_ROM_RAM },
+    { 0x09, false, "ROM+RAM+BATTERY", ID_ROM_RAM_BATTERY },
+    { 0x0B, false, "MMM01", ID_MMM01 },
+    { 0x0C, false, "MMM01+RAM", ID_MMM01_RAM },
+    { 0x0D, false, "MMM01+RAM_BATTERY", ID_MMM01_RAM_BATTERY },
+    { 0x0F, false, "MBC3+TIMER+BATTERY", ID_MBC3_TIMER_BATTERY },
+    { 0x10, false, "MBC3+TIMER+RAM+BATTERY", ID_MBC3_TIMER_RAM_BATTERY },
+    { 0x11, false, "MBC3", ID_MBC3 },
+    { 0x12, false, "MBC3+RAM", ID_MBC3_RAM },
+    { 0x13, false, "MBC3+RAM+BATTERY", ID_MBC3_RAM_BATTERY },
+    { 0x15, false, "MBC4", ID_MBC4 },
+    { 0x16, false, "MBC4+RAM", ID_MBC4_RAM },
+    { 0x17, false, "MBC4+RAM+BATTERY", ID_MBC4_RAM_BATTERY },
+    { 0x19, false, "MBC5", ID_MBC5 },
+    { 0x1A, false, "MBC5+RAM", ID_MBC5_RAM },
+    { 0x1B, false, "MBC5+RAM+BATTERY", ID_MBC5_RAM_BATTERY },
+    { 0x1C, false, "MBC5+RUMBLE", ID_MBC5_RUMBLE },
+    { 0x1D, false, "MBC5+RUMBLE+RAM", ID_MBC5_RUMBLE_RAM },
+    { 0x1E, false, "MBC5+RUMBLE+RAM+BATTERY", ID_MBC5_RUMBLE_RAM_BATTERY },
+    { 0xFC, false, "POCKET CAMERA", ID_POCKET_CAMERA },
+    { 0xFD, false, "BANDAI TAMA5", ID_BANDAI_TAMA5 },
+    { 0xFE, false, "HUC3", ID_HUC3 },
+    { 0xFF, false, "HUC1+RAM+BATTERY", ID_HUC1_RAM_BATTERY }
 };
 
 bool has_battery = false;
@@ -82,17 +87,17 @@ bool has_battery = false;
 void set_has_battery(CartridgeType* cartridge_type) {
     assert(cartridge_type != NULL);
     switch(cartridge_type->id) {
-        case MBC1_RAM_BATTERY:
-        case MBC2_BATTERY:
-        case ROM_RAM_BATTERY:
-        case MMM01_RAM_BATTERY:
-        case MBC3_TIMER_BATTERY:
-        case MBC3_TIMER_RAM_BATTERY:
-        case MBC3_RAM_BATTERY:
-        case MBC4_RAM_BATTERY:
-        case MBC5_RAM_BATTERY:
-        case MBC5_RUMBLE_RAM_BATTERY:
-        case HUC1_RAM_BATTERY:
+        case ID_MBC1_RAM_BATTERY:
+        case ID_MBC2_BATTERY:
+        case ID_ROM_RAM_BATTERY:
+        case ID_MMM01_RAM_BATTERY:
+        case ID_MBC3_TIMER_BATTERY:
+        case ID_MBC3_TIMER_RAM_BATTERY:
+        case ID_MBC3_RAM_BATTERY:
+        case ID_MBC4_RAM_BATTERY:
+        case ID_MBC5_RAM_BATTERY:
+        case ID_MBC5_RUMBLE_RAM_BATTERY:
+        case ID_HUC1_RAM_BATTERY:
             has_battery = true;
             printf("cartridge has battery\n");
             return;
@@ -122,34 +127,39 @@ static int get_cartridge_ram_size(int header_value);
 int load_cartridge(const uint8_t* buffer, int size) {
     assert(buffer != NULL);
     assert(size > 0);
+
+    //TODO make this better
+    assert(cartridge == NULL);
+    cartridge = (Cartridge*)calloc(sizeof(Cartridge), 1);
+    assert(cartridge != NULL);
     
     //TODO make this better
-    assert(cartridge_rom == NULL);
+    assert(cartridge->rom == NULL);
 
-    cartridge_rom = (uint8_t*)malloc(size);
+    cartridge->rom = (uint8_t*)malloc(size);
     
     //TODO better null check
-    assert(cartridge_rom != NULL);
-    memcpy(cartridge_rom, buffer, size);
+    assert(cartridge->rom != NULL);
+    memcpy(cartridge->rom, buffer, size);
 
-    cartridge_rom_size = size;
+    cartridge->rom_size = size;
 
     /* Cartridge RAM */
-    cartridge_ram_size = get_cartridge_ram_size(cartridge_rom[0x0149]);
+    cartridge->ram_size = get_cartridge_ram_size(cartridge->rom[0x0149]);
     //TODO handle errors
-    assert(cartridge_ram_size >= 0);
-    assert(cartridge_ram == NULL);
+    assert(cartridge->ram_size >= 0);
+    assert(cartridge->ram == NULL);
 
-    if(cartridge_ram_size > 0) {
-        cartridge_ram = (uint8_t*)malloc(cartridge_ram_size);
-        assert(cartridge_ram != NULL); 
+    if(cartridge->ram_size > 0) {
+        cartridge->ram = (uint8_t*)malloc(cartridge->ram_size);
+        assert(cartridge->ram != NULL); 
     } else {
         printf("skipping allocation of cartridge ram\n");
     }
 
     /* TYPE */
     
-    cartridge_type = get_cartridge_type(cartridge_rom[0x0147]);
+    cartridge_type = get_cartridge_type(cartridge->rom[0x0147]);
     //TODO handle errors
     assert(cartridge_type != NULL);
     printf("cartridge type: %s\n", cartridge_type->name);
@@ -158,7 +168,7 @@ int load_cartridge(const uint8_t* buffer, int size) {
     set_has_battery(cartridge_type);
 
     printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
-            cartridge_ram_size / 1024, size / 1024);
+            cartridge->ram_size / 1024, size / 1024);
 
     //TODO actually verify...
     verify_cartridge();
@@ -203,26 +213,26 @@ int verify_cartridge() {
 	title[0x10 - 1] = '\0';
 	int i;
 	for(i = 0x134; i < 0x144; ++i) {
-		title[i - 0x134] = cartridge_rom[i];
+		title[i - 0x134] = cartridge->rom[i];
 	}
 	printf("Title: %s\n", title);
 
     int expected_cartridge_rom_size =
-       get_cartridge_rom_size(cartridge_rom[0x148]);
+       get_cartridge_rom_size(cartridge->rom[0x148]);
 
 	printf("expected ROM size: %i KiB\n", 
             expected_cartridge_rom_size / 1024);
 	
     /* CHECKSUM */
 	u32 sum = 0;
-	for(i = 0; i < cartridge_rom_size; ++i) {
-		sum += cartridge_rom[i];
+	for(i = 0; i < cartridge->rom_size; ++i) {
+		sum += cartridge->rom[i];
 	}
-	sum -= ((u16)cartridge_rom[0x14e] + cartridge_rom[0x14f]);
+	sum -= ((u16)cartridge->rom[0x14e] + cartridge->rom[0x14f]);
 
     sum &= 0x0000FFFF;
 
-    u16 checksum = (cartridge_rom[0x014E] << 8) | cartridge_rom[0x014F];
+    u16 checksum = (cartridge->rom[0x014E] << 8) | cartridge->rom[0x014F];
 
     if(sum != checksum) {
         printf("WARNING: invalid checksum\n");

@@ -1,6 +1,7 @@
 #include "memory.h"
 
 #include "joypad.h"
+#include "cartridge.h"
 
 
 #define INVALID_WRITE( location )															\
@@ -141,12 +142,6 @@ uint8_t* selected_gameboy_vram_bank = NULL;
 uint8_t* selected_gameboy_ram_bank = NULL;
 
 
-typedef enum {
-    NONE,
-    MBC1,
-    MBC2,
-} MemoryBankController;
-
 void update_selected_cartridge_rom(Cartridge* cartridge) {
 
     assert(cartridge != NULL);
@@ -154,48 +149,25 @@ void update_selected_cartridge_rom(Cartridge* cartridge) {
     
     /* TODO check endianess */
     cartridge->selected_rom = 
-        &cartridge->rom[selected_rom_bank * 0x4000]; 
+        &cartridge->rom[cartridge->selected_rom_bank * 0x4000]; 
      
 }
+void update_selected_cartridge_ram(Cartridge* cartridge) {
+    assert(cartridge != NULL);
 
-void update_selected_cartridge_rom_bank() {
-    u32 rom_bank = mbc_control[ROM_BANK_LOW];
-    rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
-
-    /* TODO this should only happen in MBC1 (i think) */
-
-    if(rom_bank == 0)
-        rom_bank = 1;
-
-    selected_cartridge_rom_bank = 
-        &cartridge_rom[rom_bank * 0x4000];
+    cartridge->selected_ram = 
+        &cartridge->ram[cartridge->selected_ram_bank * 0x2000];
 }
 
+/*
+void update_selected_cartridge_ram_bank() {
+    u32 ram_bank = mbc_control[RAM_BANK];
 
-typedef struct {
-    MemoryBankController mbc;
+    selected_cartridge_ram_bank = 
+        &cartridge_ram[ram_bank * 0x2000];
+}
+*/
 
-    uint8_t* rom;
-    uint8_t* ram;
-    int ram_size;
-    int rom_size;
-
-    uint8_t* selected_rom;
-    uint8_t* selected_ram;
-
-    //int selected_rom_bank;
-    int selected_rom_bank;
-    int selected_ram_bank;
-
-    uint8_t (*read)(uint16_t);
-    void (*write)(uint16_t, uint8_t);
-
-    bool ram_enabled;
-    uint8_t banking_mode;
-
-} Cartridge;
-
-Cartridge* cartridge = NULL;
 
 void update_cartridge_banking(Cartridge* cartridge) {
 
@@ -205,12 +177,14 @@ void update_cartridge_banking(Cartridge* cartridge) {
 
         cartridge->selected_rom_bank |= 
             (cartridge->selected_ram_bank << 5);
-        update_selected_rom_bank(cartridge);
+        update_selected_cartridge_rom(cartridge);
 
     } else {
 
+        /* reset the selected rom bank */
         cartridge->selected_rom_bank &= 0x1F;
-        update_selected_ram_bank(cartridge);
+        update_selected_cartridge_rom(cartridge);
+        update_selected_cartridge_ram(cartridge);
 
     }
 }
@@ -282,7 +256,7 @@ uint8_t mbc1_read(uint16_t location) {
 
             //DIRTY HAX. FIX THIS
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
-                return bios[location];
+                return gameboy_bios[location];
 
             return cartridge->rom[location];
         }
