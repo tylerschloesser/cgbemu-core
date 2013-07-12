@@ -45,11 +45,19 @@ void MBC_write(uint16_t location, uint8_t data);
 uint8_t (*read_memory)(uint16_t);
 void (*write_memory)(uint16_t, uint8_t);
 
-
 void update_selected_cartridge_rom_bank();
 void update_selected_cartridge_ram_bank();
 void update_selected_gameboy_ram_bank();
 void update_selected_gameboy_vram_bank();
+
+
+void update_all_selected_banks() {
+    update_selected_gameboy_vram_bank();
+    update_selected_gameboy_ram_bank();
+    update_selected_cartridge_ram_bank();
+    update_selected_cartridge_rom_bank();
+}
+
 
 void initialize_memory( void ) 
 {
@@ -100,11 +108,8 @@ void initialize_memory( void )
 	hardware_registers[BLCK] = 0; /* enable bios */
 
     hardware_registers[VBK] = 0;
-    update_selected_gameboy_vram_bank();
-    update_selected_gameboy_ram_bank();
-    update_selected_cartridge_ram_bank();
-    update_selected_cartridge_rom_bank();
-	
+    update_all_selected_banks();
+   
 	memory_initialized = true;
 }
 

@@ -17,6 +17,8 @@ extern int cartridge_rom_size;
 extern uint8_t (*read_memory)(uint16_t);
 extern void (*write_memory)(uint16_t, uint8_t);
 
+void update_all_selected_banks();
+
 //TODO TEMP
 bool in_bios;
 

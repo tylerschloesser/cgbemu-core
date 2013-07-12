@@ -30,37 +30,35 @@ static int last_frame = 0;
 
 static int target_elapsed = 16; // 60fps
 
-bool should_save_state = false;
-void temp_save_state() {
-    should_save_state = true;
-}
-void actual_save_state() {
+bool save_state_called = false;
+bool load_state_called = false;
 
-    printf("saving state...\n");
-    uint8_t* state;
-    int size;
+void save_state_callback() {
+
+    uint8_t* state = NULL;
+    int size = 0;
+
     cgbemu_save_state(&state, &size);
-    assert(size > 0);
 
-    printf("save state size: %i\n", size);
+    assert(size > 0);
+    assert(state != NULL);
 
     FILE* file = fopen("save_state.bin", "wb");
-    int written = 0;
-    while(written < size) {
-        written += fwrite((state + written), 1, (size - written), file); 
+    int bytes_written = 0;
+    while(bytes_written < size)
+        bytes_written += fwrite((state + bytes_written), 1, (size - bytes_written), file); 
+       
+    if(bytes_written == 0) {
+        perror("fwrite() failed\n");
+        return;
     }
 
-    printf("wrote %i bytes\n", written);
     fclose(file);
-    
+
+    free(state);
 }
 
-bool should_load_state = false;
-void temp_load_state() {
-    should_load_state= true;
-}
-
-void actual_load_state() {
+void load_state_callback() {
  
 	FILE *file = fopen("save_state.bin", "rb");
 
@@ -75,7 +73,8 @@ void actual_load_state() {
 	
 	uint8_t* state = malloc(size);
 	
-	if(fread(state, sizeof(*state), size, file) == 0) {
+    int bytes_read;
+	if((bytes_read = fread(state, sizeof(*state), size, file)) == 0) {
         perror("fread() failed");
 		fclose(file);
 		return;
@@ -116,12 +115,12 @@ void idle(void)
 	last_frame = current_time;
 
 
-    if(should_save_state == true) {
-        actual_save_state();
-        should_save_state = false;
-    } else if(should_load_state == true) {
-        actual_load_state();
-        should_load_state = false;
+    if(save_state_called == true) {
+        save_state_callback();
+        save_state_called = false;
+    } else if(load_state_called == true) {
+        load_state_callback();
+        load_state_called = false;
     }
 	
 	if(!step_through) 
@@ -237,11 +236,11 @@ void processSpecial(int key, bool down)
 			break;
         case GLUT_KEY_F1:
             if(!down)
-                temp_save_state();
+                save_state_called = true;
             break;
         case GLUT_KEY_F2:
             if(!down)
-                temp_load_state();
+                load_state_called = true;
             break;
 
 		default:

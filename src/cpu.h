@@ -39,6 +39,8 @@ typedef struct {
 	Z80Register IR;
 	
 } CpuState;
+//TODO temp
+void print_cpu_state();
 
 typedef enum {
 	STOPPED,
