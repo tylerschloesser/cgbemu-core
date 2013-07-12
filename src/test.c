@@ -8,8 +8,11 @@
 
 #include "android_interface.h"
 
-#define TEXTURE_WIDTH 256
-#define TEXTURE_HEIGHT 256
+
+//#define TEXTURE_WIDTH 256
+#define TEXTURE_WIDTH 160
+//#define TEXTURE_HEIGHT 256
+#define TEXTURE_HEIGHT 144 
 
 static int image_width = 160;
 static int image_height = 144;
@@ -19,8 +22,8 @@ static int image_height = 144;
 
 uint16_t frame[FRAME_HEIGHT][FRAME_WIDTH];
 
-int window_width = 200;
-int window_height = 200;
+int window_width = 1300;
+int window_height = 900;
 
 static GLuint texture = 0;
 
@@ -104,7 +107,7 @@ void idle(void)
 	
 	if(elapsed < target_elapsed) {
 #ifdef _WIN32
-		Sleep(elapsed);
+		//Sleep(elapsed);
 #else
         //usleep(elapsed * 1000);
         //fprintf(stderr, "sleeping for %i micro-seconds\n", elapsed);
@@ -215,6 +218,9 @@ void processKeyboard(int key, bool down)
 		case ' ':
 			if(!down) step();
 			break;
+        case 'q':
+            exit(EXIT_SUCCESS);
+
 		default:
 			return;
 	}
@@ -273,10 +279,6 @@ void specialUp(int key, int x, int y)
 
 int open_cartridge(char* filepath)
 {
-	//char filepath[] = "E:\\Software\\Gaming\\Pokemon Rom and emulator Pack\\POKEMON_ROM_PACK\\POKEMON_ROM_PACK\\GB ROMS\\Pokemon Yellow.gbc";
-	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\cpu_instrs.gb";
-
-	//char filepath[] = "D:\\Code\\cgbemu\\tests\\cpu_instrs\\cpu_instrs\\individual\\02-interrupts.gb";
     if(filepath == NULL)
     	filepath = "./roms/cpu_instrs.gb";
 

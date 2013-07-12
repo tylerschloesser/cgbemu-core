@@ -8,4 +8,6 @@ src/bios/
 src/test
 src/save_state.bin
 *.backup
-
+*.out
+*.old
+*.exe
