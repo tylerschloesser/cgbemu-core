@@ -74,7 +74,7 @@ int cgbemu_load_cartridge(const uint8_t* buffer, int size)
 
 void cgbemu_load_bios(uint8_t* buffer, int size)
 {
-	assert(cartridge_rom != NULL);
+	assert(cartridge->rom != NULL);
 	assert(size > 0);
 	
 	if(size > GAMEBOY_BIOS_SIZE) {

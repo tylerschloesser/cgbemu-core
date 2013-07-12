@@ -450,7 +450,8 @@ void MBC_write(uint16_t location, uint8_t data)
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        mbc5_write(location, data);
+        //mbc5_write(location, data);
+        mbc1_write(location, data);
         return;
     }
 	else if(location < 0x10000) /* E000-FFFF */
@@ -637,7 +638,8 @@ uint8_t MBC_read(uint16_t location) {
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        return mbc5_read(location);
+        //return mbc5_read(location);
+        return mbc1_read(location);
     }
    	else if (location < 0x10000) /* E000-FFFF */
 	{
