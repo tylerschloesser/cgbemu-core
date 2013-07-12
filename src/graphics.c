@@ -126,7 +126,9 @@ int render_background(u8 lcd_control)
 			render_window = true;
 		}
 	}
-	
+
+    /* TODO we could intercept the changing of the LCD control
+        register and remove the need for these checks */	
 	signed_tiles = false;
 	tile_data_offset = 0x0;
 	if((lcd_control & BG_WINDOW_TILE_DATA_SELECT) == 0) {
