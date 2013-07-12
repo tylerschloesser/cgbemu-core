@@ -157,7 +157,7 @@ case 0x27: //DAA
 
     TR.W = REG_A;
     TR.W |= (REG_F&(CF|HF|NF))<<4;
-    AF.W = DAATable[TR.W];
+    AF.W = DAA_table[TR.W];
     CLOCK_CYCLES(4);
 
 case 0x28: //JR Z, r8

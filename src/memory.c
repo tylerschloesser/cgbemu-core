@@ -100,14 +100,12 @@ void initialize_memory(GameboyModel model)
 	for(i = 0; i < 4; ++i) {
 		mbc_control[i] = 0;
 	}
-	printf("DONE CLEARING MEMORY\n");
 	
 	/* do special memory stuff here */
-    
 	hardware_registers[SVBK] = 1; /* selected ram bank should never be 0 */
 	hardware_registers[BLCK] = 0; /* enable bios */
-
     hardware_registers[VBK] = 0;
+
     update_all_selected_banks();
    
 	memory_initialized = true;
@@ -415,9 +413,6 @@ void mbc5_write(uint16_t location, uint8_t data) {
             location &= 0x0FFF;
             selected_gameboy_ram_bank[location] = data;
             break;
-
-
-
     }
 }
 
