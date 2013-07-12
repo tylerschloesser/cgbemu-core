@@ -30,6 +30,66 @@ static int last_frame = 0;
 
 static int target_elapsed = 16; // 60fps
 
+bool should_save_state = false;
+void temp_save_state() {
+    should_save_state = true;
+}
+void actual_save_state() {
+
+    printf("saving state...\n");
+    uint8_t* state;
+    int size;
+    cgbemu_save_state(&state, &size);
+    assert(size > 0);
+
+    printf("save state size: %i\n", size);
+
+    FILE* file = fopen("save_state.bin", "wb");
+    int written = 0;
+    while(written < size) {
+        written += fwrite((state + written), 1, (size - written), file); 
+    }
+
+    printf("wrote %i bytes\n", written);
+    fclose(file);
+    
+}
+
+bool should_load_state = false;
+void temp_load_state() {
+    should_load_state= true;
+}
+
+void actual_load_state() {
+ 
+	FILE *file = fopen("save_state.bin", "rb");
+
+	if(!file) {
+        perror("fopen() failed");
+		return;
+	}
+	
+	fseek(file, 0, SEEK_END);
+	int	size = ftell(file);
+	rewind(file);
+	
+	uint8_t* state = malloc(size);
+	
+	if(fread(state, sizeof(*state), size, file) == 0) {
+        perror("fread() failed");
+		fclose(file);
+		return;
+	}
+	
+	fclose(file);
+
+    cgbemu_load_state(state, size);
+
+    free(state);
+}
+
+     
+
 
 bool step_through = false;
 void step()
@@ -54,6 +114,15 @@ void idle(void)
 #endif
 	}
 	last_frame = current_time;
+
+
+    if(should_save_state == true) {
+        actual_save_state();
+        should_save_state = false;
+    } else if(should_load_state == true) {
+        actual_load_state();
+        should_load_state = false;
+    }
 	
 	if(!step_through) 
 		glutPostRedisplay();
@@ -166,10 +235,20 @@ void processSpecial(int key, bool down)
 		case GLUT_KEY_LEFT:
 			cgbemu_set_button_pressed(BUTTON_LEFT, down);
 			break;
+        case GLUT_KEY_F1:
+            if(!down)
+                temp_save_state();
+            break;
+        case GLUT_KEY_F2:
+            if(!down)
+                temp_load_state();
+            break;
+
 		default:
 			return;
 	}
 }
+
 
 void keyboard(unsigned char key, int x, int y)
 {

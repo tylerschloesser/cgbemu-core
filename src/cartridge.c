@@ -163,6 +163,11 @@ int load_cartridge(const uint8_t* buffer, int size) {
     //TODO actually verify...
     verify_cartridge();
 
+
+    //TODO this is only temporary
+    int save_state_size = get_save_state_size();
+    printf("Save State size: %i B\n", save_state_size);
+
     return 0;
 }
 

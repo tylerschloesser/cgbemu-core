@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
 
 #ifdef _WIN32
 #define sleep Sleep

@@ -86,7 +86,16 @@ void cgbemu_load_bios(uint8_t* buffer, int size)
 }
 
 
+void cgbemu_save_state(uint8_t** buffer, int* size) {
+    (*size) = get_save_state_size();
+    save_state(buffer);
+}
 
+void cgbemu_load_state(uint8_t* buffer, int size) {
+    load_state(buffer, size);
+}
+
+ 
 
 
 

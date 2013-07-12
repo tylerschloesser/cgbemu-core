@@ -29,4 +29,8 @@ typedef enum {
 
 void gameboy_toggle_button( Button button, bool pressed );
 
+//TODO
+int get_save_state_size();
+
+
 #endif // GAMEBOY_H_

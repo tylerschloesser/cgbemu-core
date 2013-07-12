@@ -185,6 +185,95 @@ void gameboy_save_state( char* save_state_filepath )
 	start_cpu();
 }
 
+*/
+
+int get_save_state_size() {
+    // calculate memory required 
+    int save_state_size = 0;
+    
+    save_state_size += sizeof(CpuState);
+    save_state_size += cartridge_ram_size;
+    save_state_size += cartridge_rom_size; //include ROM because
+    save_state_size += (0x40 + 0x40); //pallete and sprite pallete
+    save_state_size += GAMEBOY_RAM_SIZE;
+    save_state_size += GAMEBOY_VRAM_SIZE;
+    save_state_size += GAMEBOY_OAM_SIZE;
+    save_state_size += BIOS_SIZE;
+    save_state_size += 0x7F; //zero page
+    save_state_size += 1; //interrupt enabled
+    save_state_size += 0x80; //hardware registers
+    save_state_size += 1; //ime 
+    save_state_size += 4; //mbc_control
+
+    return save_state_size;
+}
+
+void cpy(uint8_t** p_dest, uint8_t* source, int size) {
+    uint8_t* dest = *p_dest;
+    memcpy(dest, source, size);
+    (*p_dest) += size;
+}
+
+void cpy2(uint8_t** p_source, uint8_t* dest, int size) {
+    uint8_t* source = *p_source;
+    memcpy(dest, source, size);
+    (*p_source) += size;
+}
+
+
+void save_state(uint8_t** buffer) {
+    int save_state_size = get_save_state_size();
+    assert(save_state_size > 0);
+
+    (*buffer) = (uint8_t*)malloc(save_state_size);
+    	
+	CpuState state = get_cpu_state();
+	u8* state_raw = (u8*)&state;
+	
+    cpy(buffer, state_raw, sizeof(CpuState));
+    cpy(buffer, cartridge_ram, cartridge_ram_size);
+    cpy(buffer, cartridge_rom, cartridge_rom_size);
+    cpy(buffer, pallete, 0x40);
+    cpy(buffer, sprite_pallete, 0x40);
+    cpy(buffer, gameboy_ram, GAMEBOY_RAM_SIZE);
+    cpy(buffer, gameboy_vram, GAMEBOY_VRAM_SIZE);
+    cpy(buffer, gameboy_oam, GAMEBOY_OAM_SIZE);
+    cpy(buffer, bios, BIOS_SIZE);
+    cpy(buffer, zero_page, 0x7F);
+    cpy(buffer, &interrupt_enable, 1);
+    cpy(buffer, hardware_registers, 0x80);
+    cpy(buffer, &IME, 1);
+    cpy(buffer, mbc_control, 4);
+}
+
+void load_state(uint8_t* buffer, int size) {
+    assert(buffer != NULL);
+    assert(size > 0);
+    assert(size == get_save_state_size());
+
+    CpuState state;
+    uint8_t* state_raw = (uint8_t*)&state;
+
+   	
+    cpy2(&buffer, state_raw, sizeof(CpuState));
+    cpy2(&buffer, cartridge_ram, cartridge_ram_size);
+    cpy2(&buffer, cartridge_rom, cartridge_rom_size);
+    cpy2(&buffer, pallete, 0x40);
+    cpy2(&buffer, sprite_pallete, 0x40);
+    cpy2(&buffer, gameboy_ram, GAMEBOY_RAM_SIZE);
+    cpy2(&buffer, gameboy_vram, GAMEBOY_VRAM_SIZE);
+    cpy2(&buffer, gameboy_oam, GAMEBOY_OAM_SIZE);
+    cpy2(&buffer, bios, BIOS_SIZE);
+    cpy2(&buffer, zero_page, 0x7F);
+    cpy2(&buffer, &interrupt_enable, 1);
+    cpy2(&buffer, hardware_registers, 0x80);
+    cpy2(&buffer, &IME, 1);
+    cpy2(&buffer, mbc_control, 4);
+ 
+    set_cpu_state(state);
+}
+/*
+
 void gameboy_load_state( char* save_state_filepath )
 {
 	FILE* file = fopen( save_state_filepath, "rb" );
@@ -231,3 +320,5 @@ void gameboy_load_state( char* save_state_filepath )
 	start_cpu();
 }
 */
+
+
