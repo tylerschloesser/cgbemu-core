@@ -9,6 +9,7 @@
 */
 //TEMP
 extern bool cpu_step;
+extern bool enable_breakpoints;
 
 typedef union
 {

@@ -9,6 +9,13 @@
 Cartridge* cartridge = NULL;
 
 
+typedef struct {
+    int header_value;
+    bool supported;
+    char* name;
+    int id;
+} CartridgeType;
+   
 enum {
     ID_ROM_ONLY,
     ID_MBC1,
@@ -40,15 +47,77 @@ enum {
     ID_HUC3,
     ID_HUC1_RAM_BATTERY
 };
-    
 
-typedef struct {
-    int header_value;
-    bool supported;
-    char* name;
-    int id;
-} CartridgeType;
+void set_memory_bank_controller(Cartridge* cartridge, CartridgeType* cartridge_type) {
+    assert(cartridge != NULL);
+    assert(cartridge_type != NULL);
+
+    switch(cartridge_type->id) {
+        case ID_ROM_ONLY:
+        case ID_ROM_RAM:
+        case ID_ROM_RAM_BATTERY:
+            cartridge->mbc = NONE;
+            
+            break;
+        case ID_MBC1:
+        case ID_MBC1_RAM:
+        case ID_MBC1_RAM_BATTERY:
+            cartridge->mbc = MBC1;
+            cartridge->read = &mbc1_read;
+            cartridge->write = &mbc1_write;
+            printf("cartridge set to MBC1\n");
+            break; 
+        case ID_MBC2:
+        case ID_MBC2_BATTERY:
+            cartridge->mbc = MBC2;
+            cartridge->read = &mbc2_read;
+            cartridge->write = &mbc2_write;
+            break; 
+        case ID_MBC3_TIMER_BATTERY:
+        case ID_MBC3_TIMER_RAM_BATTERY:
+        case ID_MBC3:
+        case ID_MBC3_RAM:
+        case ID_MBC3_RAM_BATTERY:
+            cartridge->mbc = MBC3;
+            cartridge->read = &mbc3_read;
+            cartridge->write = &mbc3_write;
+            //cartridge->read = &mbc1_read;
+            //cartridge->write = &mbc1_write;
+
+
+            break;
+        case ID_MBC4:
+        case ID_MBC4_RAM:
+        case ID_MBC4_RAM_BATTERY:
+            cartridge->mbc = MBC4;
+            cartridge->read = &mbc4_read;
+            cartridge->write = &mbc4_write;
+            break;
+        case ID_MBC5:
+        case ID_MBC5_RAM:
+        case ID_MBC5_RAM_BATTERY:
+        case ID_MBC5_RUMBLE:
+        case ID_MBC5_RUMBLE_RAM:
+        case ID_MBC5_RUMBLE_RAM_BATTERY:
+            cartridge->mbc = MBC5;
+            cartridge->read = &mbc5_read;
+            cartridge->write = &mbc5_write;
+            printf("cartridge set to MBC5\n");
+            break; 
+        case ID_MMM01:
+        case ID_MMM01_RAM:
+        case ID_MMM01_RAM_BATTERY:
+        case ID_POCKET_CAMERA:
+        case ID_BANDAI_TAMA5:
+        case ID_HUC3:
+        case ID_HUC1_RAM_BATTERY:
+        default:
+            cartridge->mbc = UNSUPPORTED;
+            break;
+    }
+}
     
+ 
 
 CartridgeType cartridge_types[] = {
     { 0x00, true,  "ROM ONLY", ID_ROM_ONLY},
@@ -82,10 +151,9 @@ CartridgeType cartridge_types[] = {
     { 0xFF, false, "HUC1+RAM+BATTERY", ID_HUC1_RAM_BATTERY }
 };
 
-bool has_battery = false;
-
-void set_has_battery(CartridgeType* cartridge_type) {
+bool get_has_battery(CartridgeType* cartridge_type) {
     assert(cartridge_type != NULL);
+
     switch(cartridge_type->id) {
         case ID_MBC1_RAM_BATTERY:
         case ID_MBC2_BATTERY:
@@ -98,11 +166,9 @@ void set_has_battery(CartridgeType* cartridge_type) {
         case ID_MBC5_RAM_BATTERY:
         case ID_MBC5_RUMBLE_RAM_BATTERY:
         case ID_HUC1_RAM_BATTERY:
-            has_battery = true;
-            printf("cartridge has battery\n");
-            return;
+            return true;
     }
-    has_battery = false;
+    return false;
 }
 
 CartridgeType* cartridge_type = NULL;
@@ -124,9 +190,9 @@ static int get_cartridge_ram_size(int header_value);
    check for max size
  */
 
-int load_cartridge(const uint8_t* buffer, int size) {
+int load_cartridge(const uint8_t* buffer, int buffer_size) {
     assert(buffer != NULL);
-    assert(size > 0);
+    assert(buffer_size > 0);
 
     //TODO make this better
     assert(cartridge == NULL);
@@ -135,14 +201,12 @@ int load_cartridge(const uint8_t* buffer, int size) {
     
     //TODO make this better
     assert(cartridge->rom == NULL);
-
-    cartridge->rom = (uint8_t*)malloc(size);
-    
-    //TODO better null check
+    cartridge->rom = (uint8_t*)calloc(buffer_size, 1);
     assert(cartridge->rom != NULL);
-    memcpy(cartridge->rom, buffer, size);
 
-    cartridge->rom_size = size;
+    memcpy(cartridge->rom, buffer, buffer_size);
+
+    cartridge->rom_size = buffer_size;
 
     /* Cartridge RAM */
     cartridge->ram_size = get_cartridge_ram_size(cartridge->rom[0x0149]);
@@ -154,7 +218,7 @@ int load_cartridge(const uint8_t* buffer, int size) {
         cartridge->ram = (uint8_t*)malloc(cartridge->ram_size);
         assert(cartridge->ram != NULL); 
     } else {
-        printf("skipping allocation of cartridge ram\n");
+        cartridge->ram = NULL;
     }
 
     /* TYPE */
@@ -165,10 +229,19 @@ int load_cartridge(const uint8_t* buffer, int size) {
     printf("cartridge type: %s\n", cartridge_type->name);
 
 
-    set_has_battery(cartridge_type);
+    set_memory_bank_controller(cartridge, cartridge_type);
+    if(cartridge->mbc == UNSUPPORTED) {
+        printf("This memory bank controller is not supported\n");
+        return 1;
+    }
+
+    cartridge->has_battery = get_has_battery(cartridge_type);
+
+
+    update_selected_cartridge_banks();
 
     printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
-            cartridge->ram_size / 1024, size / 1024);
+            cartridge->ram_size / 1024, cartridge->rom_size / 1024);
 
     //TODO actually verify...
     verify_cartridge();
@@ -184,13 +257,13 @@ int load_cartridge(const uint8_t* buffer, int size) {
 static int get_cartridge_ram_size(int header_value) {
     switch(header_value) {
         case 0:
-            return 0; // no cartridge ram
+            return 0; /* no cartridge ram */
         case 1:
-            return 0x800; // 2KiB
+            return 0x800; /* 2KiB */
         case 2:
-            return 0x2000; // 8KiB
+            return 0x2000; /* 8KiB */
         case 3:
-            return 0x8000; // 32KiB
+            return 0x8000; /* 32KiB */
     }
     return -1;
 }

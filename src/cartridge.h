@@ -10,6 +10,10 @@ typedef enum {
     NONE,
     MBC1,
     MBC2,
+    MBC3,
+    MBC4,
+    MBC5,
+    UNSUPPORTED 
 } MemoryBankController;
 
 
@@ -33,6 +37,9 @@ typedef struct {
 
     bool ram_enabled;
     uint8_t banking_mode;
+
+    bool has_battery;
+    uint8_t rtc_register;
 
 } Cartridge;
 

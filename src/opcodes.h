@@ -64,7 +64,7 @@ case 0x0F: //RRCA
 	REG_A = (REG_F & CF) ? ((REG_A >> 1) | 0x80) : (REG_A >> 1);
 	CLOCK_CYCLES(4);
 case 0x10: //STOP 0
-	printf("STOP 0\n");
+	//printf("STOP 0\n");
     //TODO I'm not exactly sure what should happen on stop, so let's just print this message and 
     //deal with it later...
     CLOCK_CYCLES(4);

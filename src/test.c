@@ -8,6 +8,9 @@
 
 #include "android_interface.h"
 
+//temp
+#include "cpu.h"
+
 
 //#define TEXTURE_WIDTH 256
 #define TEXTURE_WIDTH 160
@@ -212,7 +215,7 @@ void processKeyboard(int key, bool down)
 		case 'x':
 			cgbemu_set_button_pressed(BUTTON_A, down);
 			break;
-		case 's':
+		case 'f':
 			if(!down) step_through = !step_through;
 			break;
 		case ' ':
@@ -220,7 +223,11 @@ void processKeyboard(int key, bool down)
 			break;
         case 'q':
             exit(EXIT_SUCCESS);
-
+        case 'b':
+            if(!down) enable_breakpoints = !enable_breakpoints;
+            break;
+        case 's':
+            if(!down) cpu_step = !cpu_step;
 		default:
 			return;
 	}

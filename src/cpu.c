@@ -588,6 +588,9 @@ void emulate_cpu() {
 	while( emulator_state != STOPPED ) {
 
 		u32 current_cycles = execute();
+
+        /*TODO just testing...*/
+        current_cycles /= 4;
 		
 		cycles += current_cycles;
 		mode_cycles += current_cycles;
@@ -682,6 +685,7 @@ static void update_lcd_status()
 			interrupt( LCD_STATUS );
 		}
 	}
+
 	
 	hardware_registers[STAT] = lcd_status;
 }
@@ -732,6 +736,17 @@ static void update_lcd( u32 current_cycles )
 			}
             
 			++hardware_registers[LY];
+
+            /* TODO this is in testing.... */
+            if(hardware_registers[LY] == hardware_registers[LYC]) {
+                hardware_registers[STAT] |= 0x02;
+                if(hardware_registers[STAT] & 0x40) {
+                    interrupt(LCD_STATUS);
+                    printf("happening...\n");
+                }
+            } else {
+                hardware_registers[STAT] &= ~0x02;
+            }
 		}
 	}
 }
@@ -833,12 +848,13 @@ static void service_interrupts()
 	}
 }
 
+
 void print_cpu_state()
 {
 	
-	printf("AF=%04X\tBC=%04X\tDE=%04X\tHL=%04X\tSP=%04X\tPC=%04X\t(%s)\n",\
+
+	fprintf(stdout, "AF=%04X\tBC=%04X\tDE=%04X\tHL=%04X\tSP=%04X\tPC=%04X\t(%s)\n",\
 	AF.W, BC.W, DE.W, HL.W, SP.W, PC.W, opcode[READ(PC.W)]);
-    printf("TIMA=%X\n", READ(0xFF05));
 \
 	//TEMPORARY
 	/*
@@ -850,11 +866,30 @@ void print_cpu_state()
 //temp
 //static bool debug_daa = false;
 bool cpu_step = false;
+bool enable_breakpoints = true;
 static int execute() {
+
+
+    uint16_t breakpoints[] = {
+        //0x0100,
+        //0x467,
+        0xf0a,
+    };
+
+    if(enable_breakpoints) {
+        int i; 
+        for(i = 0; i < (sizeof(breakpoints) / sizeof(uint16_t)); ++i) {
+            if(PC.W == breakpoints[i]) {
+                printf("breaking at %X\n", breakpoints[i]);
+                //cpu_step = true;
+            }
+           
+        }
+    }
 
     if(cpu_step) {
 	    print_cpu_state();
-	    getchar();
+	    if(getchar() == 's') cpu_step = false;
     }
 
 	/* variables that may be used by certain instructions */

@@ -20,6 +20,7 @@ extern uint8_t (*read_memory)(uint16_t);
 extern void (*write_memory)(uint16_t, uint8_t);
 
 void update_all_selected_banks();
+void update_selected_cartridge_banks();
 
 //TODO TEMP
 bool in_bios;
@@ -30,6 +31,21 @@ enum MBC_control {
     ROM_BANK_HIGH,
     RAM_BANK
 };
+
+
+void mbc0_write(uint16_t location, uint8_t data);
+uint8_t mbc0_read(uint16_t location);
+void mbc1_write(uint16_t location, uint8_t data);
+uint8_t mbc1_read(uint16_t location);
+void mbc2_write(uint16_t location, uint8_t data);
+uint8_t mbc2_read(uint16_t location);
+void mbc3_write(uint16_t location, uint8_t data);
+uint8_t mbc3_read(uint16_t location);
+void mbc4_write(uint16_t location, uint8_t data);
+uint8_t mbc4_read(uint16_t location);
+void mbc5_write(uint16_t location, uint8_t data);
+uint8_t mbc5_read(uint16_t location);
+
 
 enum hardware_register {
     P1      = 0x00, //read joypad info

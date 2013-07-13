@@ -15,11 +15,13 @@
 #define PALLETE_SIZE 0x40
 #define SPRITE_PALLETE_SIZE 0x40
 
+/*
 int cartridge_rom_size = 0;
 int cartridge_ram_size = 0;
 
 uint8_t* cartridge_rom = NULL;
 uint8_t* cartridge_ram = NULL;
+*/
 
 u8 pallete[PALLETE_SIZE];
 u8 sprite_pallete[SPRITE_PALLETE_SIZE];
@@ -48,8 +50,10 @@ void MBC_write(uint16_t location, uint8_t data);
 uint8_t (*read_memory)(uint16_t);
 void (*write_memory)(uint16_t, uint8_t);
 
+/*
 void update_selected_cartridge_rom_bank();
 void update_selected_cartridge_ram_bank();
+*/
 void update_selected_gameboy_ram_bank();
 void update_selected_gameboy_vram_bank();
 
@@ -57,8 +61,16 @@ void update_selected_gameboy_vram_bank();
 void update_all_selected_banks() {
     update_selected_gameboy_vram_bank();
     update_selected_gameboy_ram_bank();
+/*
     update_selected_cartridge_ram_bank();
     update_selected_cartridge_rom_bank();
+    */
+}
+
+
+void update_selected_cartridge_banks() {
+    update_selected_cartridge_ram(cartridge);
+    update_selected_cartridge_rom(cartridge);
 }
 
 
@@ -123,21 +135,10 @@ void reinitialize_memory(GameboyModel model)
 	initialize_memory(model);
 }
 
-void mbc0_write(uint16_t location, uint8_t data);
-uint8_t mbc0_read(uint16_t location);
-void mbc1_write(uint16_t location, uint8_t data);
-uint8_t mbc1_read(uint16_t location);
-void mbc2_write(uint16_t location, uint8_t data);
-uint8_t mbc2_read(uint16_t location);
-void mbc3_write(uint16_t location, uint8_t data);
-uint8_t mbc3_read(uint16_t location);
-void mbc4_write(uint16_t location, uint8_t data);
-uint8_t mbc4_read(uint16_t location);
-void mbc5_write(uint16_t location, uint8_t data);
-uint8_t mbc5_read(uint16_t location);
-
+/*
 uint8_t* selected_cartridge_rom_bank = NULL;
 uint8_t* selected_cartridge_ram_bank = NULL;
+*/
 uint8_t* selected_gameboy_vram_bank = NULL;
 uint8_t* selected_gameboy_ram_bank = NULL;
 
@@ -206,7 +207,9 @@ void mbc1_write(uint16_t location, uint8_t data) {
             break;
         case 0x2:
         case 0x3:
-            cartridge->selected_rom_bank = (data & 0x1F);
+            data &= 0x1F;
+            if(data == 0x00) data = 0x01;
+            cartridge->selected_rom_bank = data;
             update_cartridge_banking(cartridge);
             break;
         case 0x4:
@@ -286,33 +289,134 @@ uint8_t mbc1_read(uint16_t location) {
 
 void mbc2_write(uint16_t location, uint8_t data) {
 
+    assert(false);
 }
 
 uint8_t mbc2_read(uint16_t location) {
 
+    assert(false);
 }
 
-void mbc3_write(uint16_t location, uint8_t data) {
 
+void mbc3_write(uint16_t location, uint8_t data) {
+    uint8_t location_hi = ((location & 0xF000) >> 12);
+    switch(location_hi) {
+        case 0x0:
+        case 0x1:
+            cartridge->ram_enabled = ((data & 0x0A) == 0x0A);
+            //printf("cartridge->ram_enabled=%X\n", cartridge->ram_enabled);
+            break;
+        case 0x2:
+        case 0x3:
+            data &= 0x7F;
+            if(data == 0x00) data = 0x01;
+            cartridge->selected_rom_bank = data;
+            update_selected_cartridge_rom(cartridge);
+            break;
+        case 0x4:
+        case 0x5:
+            if(data > 0x03) {
+                cartridge->rtc_register = data;
+                break;
+            }
+            cartridge->rtc_register = 0x00;
+
+            cartridge->selected_ram_bank = (data & 0x03);
+            /* TODO handle rtc stuff */ 
+            update_selected_cartridge_ram(cartridge);
+            break;
+        case 0x6:
+        case 0x7:
+            break;
+        case 0x8:
+        case 0x9:
+            location &= 0x1FFF;
+            selected_gameboy_vram_bank[location] = data;
+            break;
+        case 0xA:
+        case 0xB:
+        {
+            //TODO do something different here...
+            assert(cartridge->ram_enabled == true);
+
+            if(cartridge->rtc_register) {
+                break;
+            }
+
+
+            location &= 0x1FFF;
+            cartridge->selected_ram[location] = data;
+            break;
+        }
+        case 0xC:
+            location &= 0x0FFF;
+            gameboy_ram[location] = data;
+            break;
+        case 0xD:
+            location &= 0x0FFF;
+            selected_gameboy_ram_bank[location] = data;
+            break;
+    } 
 }
 
 uint8_t mbc3_read(uint16_t location) {
+    uint8_t location_hi = ((location & 0xF000) >> 12);
+    switch(location_hi) {
+        case 0x0:
+        case 0x1:
+        case 0x2:
+        case 0x3:
+        {
+            location &= 0x3FFF; /* ~0xC000 */
 
+            //DIRTY HAX. FIX THIS
+            if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
+                return gameboy_bios[location];
+
+            return cartridge->rom[location];
+        }
+        case 0x4: 
+        case 0x5:
+        case 0x6:
+        case 0x7:
+            location &= 0x3FFF;
+            return cartridge->selected_rom[location];
+        case 0x8:
+        case 0x9:
+            location &= 0x1FFF; /* ~0xE000 */
+            return selected_gameboy_vram_bank[location];
+        case 0xA:
+        case 0xB:
+            if(cartridge->rtc_register) {
+                return 0x00;
+            }
+            location &= 0x1FFF;
+            return cartridge->selected_ram[location];
+        case 0xC:
+            location &= 0x0FFF; /* ~0xF000 */
+            return gameboy_ram[location];
+        case 0xD:
+            location &= 0x0FFF;
+            return selected_gameboy_ram_bank[location];
+    }
+ 
 }
-
 void mbc4_write(uint16_t location, uint8_t data) {
 
+    assert(false);
 }
 
 uint8_t mbc4_read(uint16_t location) {
 
+    assert(false);
 }
 
+/*
 void update_selected_cartridge_rom_bank() {
     u32 rom_bank = mbc_control[ROM_BANK_LOW];
     rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
 
-    /* TODO this should only happen in MBC1 (i think) */
+    /* TODO this should only happen in MBC1 (i think) 
 
     if(rom_bank == 0)
         rom_bank = 1;
@@ -320,13 +424,17 @@ void update_selected_cartridge_rom_bank() {
     selected_cartridge_rom_bank = 
         &cartridge_rom[rom_bank * 0x4000];
 }
+*/
 
+/*
 void update_selected_cartridge_ram_bank() {
     u32 ram_bank = mbc_control[RAM_BANK];
 
     selected_cartridge_ram_bank = 
         &cartridge_ram[ram_bank * 0x2000];
 }
+*/
+
 
 void update_selected_gameboy_ram_bank() {
 
@@ -343,25 +451,29 @@ void update_selected_gameboy_vram_bank() {
 }
 
 
+
 void mbc5_write(uint16_t location, uint8_t data) {
     uint8_t location_hi = ((location & 0xF000) >> 12);
     switch(location_hi) {
         case 0x0:
         case 0x1:
-            mbc_control[RAM_ENABLE] = data;
+            cartridge->ram_enabled = ((data & 0x0A) == 0x0A);
             break;
         case 0x2:
-            mbc_control[ROM_BANK_LOW] = data;
-            update_selected_cartridge_rom_bank();
+            cartridge->selected_rom_bank &= ~0xFF;
+            cartridge->selected_rom_bank |= data;
+            update_selected_cartridge_rom(cartridge);
+
             break;
         case 0x3:
-            mbc_control[ROM_BANK_HIGH] = (data & 0x1);
-            update_selected_cartridge_rom_bank();
+            cartridge->selected_rom_bank &= 0xFF;
+            cartridge->selected_rom_bank |= ((data & 0x1) << 8);
+            update_selected_cartridge_rom(cartridge);
             break;
         case 0x4:
         case 0x5:
-            mbc_control[RAM_BANK] = data;
-            update_selected_cartridge_ram_bank();
+            cartridge->selected_ram_bank = (data & 0x0F);
+            update_selected_cartridge_ram(cartridge);
             break;
         case 0x6:
         case 0x7:
@@ -374,10 +486,10 @@ void mbc5_write(uint16_t location, uint8_t data) {
         case 0xA:
         case 0xB:
             //TODO do something different here...
-            assert(mbc_control[RAM_ENABLE] != 0);
+            assert(cartridge->ram_enabled == true);
 
             location &= 0x1FFF;
-            selected_cartridge_ram_bank[location] = data;
+            cartridge->selected_ram[location] = data;
             break;
         case 0xC:
             location &= 0x0FFF;
@@ -404,22 +516,25 @@ uint8_t mbc5_read(uint16_t location) {
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
                 return gameboy_bios[location];
 
-            return cartridge_rom[location];
+            return cartridge->rom[location];
         }
         case 0x4: 
         case 0x5:
         case 0x6:
         case 0x7:
             location &= 0x3FFF;
-            return selected_cartridge_rom_bank[location]; 
+            return cartridge->selected_rom[location]; 
         case 0x8:
         case 0x9:
             location &= 0x1FFF; /* ~0xE000 */
             return selected_gameboy_vram_bank[location];
         case 0xA:
         case 0xB:
+            //TODO do something different here...
+            assert(cartridge->ram_enabled == true);
+
             location &= 0x1FFF;
-            return selected_cartridge_ram_bank[location];
+            return cartridge->selected_ram[location];
         case 0xC:
             location &= 0x0FFF; /* ~0xF000 */
             return gameboy_ram[location];
@@ -450,8 +565,11 @@ void MBC_write(uint16_t location, uint8_t data)
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        //mbc5_write(location, data);
-        mbc1_write(location, data);
+        if(location == 0xcf67) {
+            //printf("wrote %X to %X\n", data, location);
+            //cpu_step = true;       
+        }
+        cartridge->write(location, data);
         return;
     }
 	else if(location < 0x10000) /* E000-FFFF */
@@ -519,6 +637,8 @@ void MBC_write(uint16_t location, uint8_t data)
 					for(i = 0; i < 0xA0; ++i) {
 							write_memory(0xFE00 + i, read_memory(dma_source + i));
 					}
+                    /* temp */
+                    hardware_registers[DMA] = data;
 					return;
 				}
 				case DIV:
@@ -638,8 +758,13 @@ uint8_t MBC_read(uint16_t location) {
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        //return mbc5_read(location);
-        return mbc1_read(location);
+        //if(location == 0xCFB3 || location == 0xcfb1 || location == 0xcfb2) {
+        if(location == 0xcf67) {
+            uint8_t data = cartridge->read(location);
+            //printf("read %X from %X\n", data, location);
+            //cpu_step = true;
+        }
+        return cartridge->read(location);
     }
    	else if (location < 0x10000) /* E000-FFFF */
 	{
@@ -670,6 +795,12 @@ uint8_t MBC_read(uint16_t location) {
                     u8 joypad_state = get_joypad_state();
                     return joypad_state;
                 }
+                case 0x51:
+                case 0x52:
+                case 0x53:
+                case 0x54:
+                case 0x55:
+                    return 0xFF;
 			}
             return hardware_registers[location - offset];
         } 

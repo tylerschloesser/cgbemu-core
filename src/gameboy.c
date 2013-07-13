@@ -4,6 +4,8 @@
 #include "memory.h"
 #include "graphics.h"
 
+#include "cartridge.h"
+
 void gameboy_toggle_speed() {
     fullspeed = !fullspeed;
 }
@@ -77,8 +79,13 @@ int get_save_state_size() {
     int save_state_size = 0;
     
     save_state_size += sizeof(CpuState);
+    /*
     save_state_size += cartridge_ram_size;
     save_state_size += cartridge_rom_size; //include ROM because
+    */
+    save_state_size += cartridge->ram_size;
+    save_state_size += cartridge->rom_size; //include ROM because
+
     save_state_size += (0x40 + 0x40); //pallete and sprite pallete
     save_state_size += GAMEBOY_RAM_SIZE;
     save_state_size += GAMEBOY_VRAM_SIZE;
@@ -118,8 +125,14 @@ void save_state(uint8_t** buffer) {
 	u8* state_raw = (u8*)&state;
 
     memcpy_id(buffer, state_raw, sizeof(CpuState));
+    /*
     memcpy_id(buffer, cartridge_ram, cartridge_ram_size);
     memcpy_id(buffer, cartridge_rom, cartridge_rom_size);
+    */
+
+    memcpy_id(buffer, cartridge->ram, cartridge->ram_size);
+    memcpy_id(buffer, cartridge->rom, cartridge->rom_size);
+
     memcpy_id(buffer, pallete, 0x40);
     memcpy_id(buffer, sprite_pallete, 0x40);
     memcpy_id(buffer, gameboy_ram, GAMEBOY_RAM_SIZE);
@@ -146,8 +159,14 @@ void load_state(uint8_t* buffer, int size) {
     uint8_t* state_raw = (uint8_t*)&state;
    	
     memcpy_is(state_raw, &buffer, sizeof(CpuState));
+    /*
     memcpy_is(cartridge_ram, &buffer, cartridge_ram_size);
     memcpy_is(cartridge_rom, &buffer, cartridge_rom_size);
+    */
+
+    memcpy_is(cartridge->ram, &buffer, cartridge->ram_size);
+    memcpy_is(cartridge->rom, &buffer, cartridge->rom_size);
+
     memcpy_is(pallete, &buffer, 0x40);
     memcpy_is(sprite_pallete, &buffer, 0x40);
     memcpy_is(gameboy_ram, &buffer, GAMEBOY_RAM_SIZE);
