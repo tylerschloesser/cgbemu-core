@@ -207,7 +207,7 @@ typedef enum {
 */
 
 static EmulatorState emulator_state = EM_INVALID;
-static CpuState cpu_state;
+CpuState cpu_state;
 static bool cpu_initialized = false;
 /*
 static SDL_mutex* cpu_mutex = NULL;
@@ -656,6 +656,7 @@ static void update_lcd_status()
 		u8 new_lcd_mode = 0;
 		bool lcd_interrupt = false;
 		
+        /* TODO shouldn't this be >= 144? */
 		if(hardware_registers[LY] > 144) {
 			/* LCD is in vertical blank, set mode to 1 */
 			new_lcd_mode = 1;
@@ -673,11 +674,25 @@ static void update_lcd_status()
 				new_lcd_mode = 3;
 				lcd_status |= 3;
 			} else {
-				/* mode 4 */
+				/* mode 0 */
 				new_lcd_mode = 0;
+                
+                u8 scanline = hardware_registers[LY];
 				if(lcd_status & 0x8) {
-					lcd_interrupt = true;
+                    /* i don't think there is an interrupt for
+                       lines past 143... */
+                    if(scanline < 144)
+					    lcd_interrupt = true;
 				}
+
+                /* TODO testing */
+                if((new_lcd_mode != lcd_mode) && (scanline < 144)) {
+                    /* HBlank check if there is an HDMA transfer in progress */
+                    if(hdma_active) {
+                        hdma_transfer();
+                    }
+                }
+
 			}
 		}
 		
@@ -689,6 +704,7 @@ static void update_lcd_status()
 	
 	hardware_registers[STAT] = lcd_status;
 }
+
 
 
 
@@ -866,7 +882,7 @@ void print_cpu_state()
 //temp
 //static bool debug_daa = false;
 bool cpu_step = false;
-bool enable_breakpoints = true;
+bool enable_breakpoints = false;
 static int execute() {
 
 

@@ -18,6 +18,8 @@
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 
+void print_map();
+
 /*
 extern SDL_Surface *surface;
 */

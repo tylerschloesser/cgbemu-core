@@ -10,7 +10,6 @@
 //TEMP
 extern bool cpu_step;
 extern bool enable_breakpoints;
-
 typedef union
 {
     u16 W;
@@ -23,6 +22,12 @@ typedef union
 typedef struct {
 	bool running;
 	bool waiting_for_interrupt;
+
+    u16 hdma_source;
+    u16 hdma_destination;
+    u16 hdma_transfer_length;
+
+    bool hdma_active;
 	
 	s32 timer_counter;
 	s32 scanline_counter;
@@ -42,7 +47,7 @@ typedef struct {
 } CpuState;
 //TODO temp
 void print_cpu_state();
-
+extern CpuState cpu_state;
 typedef enum {
 	STOPPED,
 	STARTED,
@@ -50,6 +55,14 @@ typedef enum {
 	EM_INVALID,
 } EmulatorState;
 void change_emulator_state( EmulatorState new_state );
+
+
+//TEMP AND STUPID
+#define hdma_source cpu_state.hdma_source
+#define hdma_destination cpu_state.hdma_destination
+#define hdma_transfer_length cpu_state.hdma_transfer_length
+#define hdma_active cpu_state.hdma_active
+
 
 //TEMPORARY
 extern bool output_opcodes;

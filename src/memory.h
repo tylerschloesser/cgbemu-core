@@ -22,6 +22,11 @@ extern void (*write_memory)(uint16_t, uint8_t);
 void update_all_selected_banks();
 void update_selected_cartridge_banks();
 
+void hdma_transfer(void);
+
+//temp
+extern uint8_t* selected_gameboy_vram_bank;
+
 //TODO TEMP
 bool in_bios;
 

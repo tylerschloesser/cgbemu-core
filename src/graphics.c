@@ -56,6 +56,13 @@ int render_scanline()
 	
 }
 
+bool do_print_map =false;
+bool printing = false;
+void print_map()
+{
+    do_print_map = true;
+}
+
 int render_background(u8 lcd_control)
 {
 	assert( graphics_initialized == true );
@@ -68,6 +75,19 @@ int render_background(u8 lcd_control)
 	bool render_window;
 	
 	u8 scanline = hardware_registers[LY];
+
+    //TEMP
+    if(scanline == 0 && do_print_map && !printing) {
+        do_print_map = false;
+        printing = true;
+    } else if(scanline == 0 && printing) {
+        printing = false;
+    }
+    if(printing) {
+        if(scanline%8==0)
+            printf("\n%i: ", scanline);
+    }
+
 
 	u8 scroll_y = hardware_registers[SCY];
 	u8 scroll_x = hardware_registers[SCX];
@@ -145,6 +165,7 @@ int render_background(u8 lcd_control)
 		int vram_offset = (tile_attributes & TILE_VRAM_BANK_NUMBER) ? 0x2000 : 0;
 
 		vram_offset += tile_data_offset;
+
 		
         u8 pallete_number = tile_attributes & BACKGROUND_PALETTE_NUMBER;
 		u8 pallete_index = pallete_number * 8;
@@ -174,6 +195,13 @@ int render_background(u8 lcd_control)
 		} else {
 			vram_index = tile_number * 16 + (tile_pixel / 8) * 2;
 		}
+
+
+        if(printing) {
+            if((x_pixel % 8 == 0) && (scanline % 8 == 0)) printf("%04X ", (vram_index + vram_offset));
+        }
+
+
 
 		u8 high = gameboy_vram[vram_index + vram_offset + 1];
 		u8 low  = gameboy_vram[vram_index + vram_offset + 0];
@@ -281,7 +309,8 @@ int render_sprites() {
 				sprite_line *= -1;
 			}
 			
-            u16 sprite_address = vram_offset + (tile_number * 16) + (sprite_line * 2);
+            //u16 sprite_address = vram_offset + (tile_number * 16) + (sprite_line * 2);
+            u16 sprite_address = (tile_number * 16) + (sprite_line * 2);
             
             u8 high = gameboy_vram[vram_offset + sprite_address + 1];
             u8 low = gameboy_vram[vram_offset + sprite_address + 0];

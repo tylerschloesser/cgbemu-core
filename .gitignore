@@ -3,11 +3,13 @@ src/test.exe
 src/a.out
 src/test
 *.swp
+*.swo
 *.o
 src/bios/
 src/test
-src/save_state.bin
+*.bin
 *.backup
 *.out
 *.old
 *.exe
+dumps/

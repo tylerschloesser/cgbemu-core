@@ -73,6 +73,28 @@ void update_selected_cartridge_banks() {
     update_selected_cartridge_rom(cartridge);
 }
 
+void hdma_transfer(void)
+{
+    assert(cartridge);
+    assert((hardware_registers[HDMA5] & 0x80) == 0x00);
+    fprintf(stderr, "hdma_transfer src=%04X dst=%04X len=%04X rom_bank=%X\n", 
+            hdma_source,
+            hdma_destination,
+            hdma_transfer_length,
+            cartridge->selected_rom_bank);
+
+    int i;
+    for(i = 0; i < 0x10; ++i) {
+        write_memory(hdma_destination++, read_memory(hdma_source++));
+    } 
+    hdma_transfer_length -= 0x10;
+
+    /* this looks weird, but i assure you it makes sense */
+    if(--hardware_registers[HDMA5] == 0xFF) {
+        /* transfer is complete */
+        hdma_active = false;
+    }
+}
 
 void initialize_memory(GameboyModel model) 
 {
@@ -146,7 +168,7 @@ uint8_t* selected_gameboy_ram_bank = NULL;
 void update_selected_cartridge_rom(Cartridge* cartridge) {
 
     assert(cartridge != NULL);
-
+  
     
     /* TODO check endianess */
     cartridge->selected_rom = 
@@ -304,7 +326,6 @@ void mbc3_write(uint16_t location, uint8_t data) {
         case 0x0:
         case 0x1:
             cartridge->ram_enabled = ((data & 0x0A) == 0x0A);
-            //printf("cartridge->ram_enabled=%X\n", cartridge->ram_enabled);
             break;
         case 0x2:
         case 0x3:
@@ -445,6 +466,7 @@ void update_selected_gameboy_ram_bank() {
 
 void update_selected_gameboy_vram_bank() {
     u32 vram_bank = hardware_registers[VBK];
+    //printf("switching to vram_bank %i\n", vram_bank);
 
     selected_gameboy_vram_bank = 
         &gameboy_vram[vram_bank * 0x2000];
@@ -460,13 +482,13 @@ void mbc5_write(uint16_t location, uint8_t data) {
             cartridge->ram_enabled = ((data & 0x0A) == 0x0A);
             break;
         case 0x2:
-            cartridge->selected_rom_bank &= ~0xFF;
+            cartridge->selected_rom_bank &= 0xFF00;
             cartridge->selected_rom_bank |= data;
             update_selected_cartridge_rom(cartridge);
 
             break;
         case 0x3:
-            cartridge->selected_rom_bank &= 0xFF;
+            cartridge->selected_rom_bank &= 0x00FF;
             cartridge->selected_rom_bank |= ((data & 0x1) << 8);
             update_selected_cartridge_rom(cartridge);
             break;
@@ -565,7 +587,7 @@ void MBC_write(uint16_t location, uint8_t data)
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        if(location == 0xcf67) {
+        if(location == 0x83c0) {
             //printf("wrote %X to %X\n", data, location);
             //cpu_step = true;       
         }
@@ -612,21 +634,63 @@ void MBC_write(uint16_t location, uint8_t data)
                 }
 				case HDMA5:
 				{
-					u32 dma_source, dma_destination;
-					u8 *dma_registers = &hardware_registers[HDMA1];
-					dma_source = (*dma_registers) << 8;
-					dma_source |= (*(++dma_registers));
-					dma_destination = (*(++dma_registers)) << 8;
-					dma_destination |= (*(++dma_registers));
-					
-					u32 dma_transfer_length = ((data & 0x7F) + 1) * 0x10;
+                    if(hdma_active == true) {
+                        if(data & 0x80 == 0x00) {
+                            /* cancel the DMA */
+                            hdma_active = false;
+                            hardware_registers[HDMA5] = 0xFF;
+                        } else {
+                            /* TODO not sure what this does... */
+                            hardware_registers[HDMA5] = (data & 0x7F); 
+                        }
+                        return;
+                    }
 
-					int i;
-					for(i = 0; i < dma_transfer_length; ++i) {
-							write_memory(dma_destination + i, read_memory(dma_source + i));
-					}
-					/* indicate that the DMA transfer is inactive */
-					hardware_registers[HDMA5] |= 0x80;
+                    /* TODO this is stupid... fix this */
+                    u8 *dma_registers = &hardware_registers[HDMA1];
+                    hdma_source = (*dma_registers) << 8;
+                    hdma_source |= (*(++dma_registers));
+                    hdma_destination = (*(++dma_registers)) << 8;
+                    hdma_destination |= (*(++dma_registers));
+
+                    /* clear the 4 lsb */
+                    hdma_destination &= ~0x000F;
+                    //hdma_destination &= ~0x000F;
+                    hdma_source &= 0xFFF0;
+                    /* clear the 3 msb */
+                    hdma_destination &= ~0xE000;
+                    hdma_destination |= 0x8000;
+                    
+                    hdma_transfer_length = ((data & 0x7F) + 1) * 0x10;
+
+                    if((data & 0x80) == 0x00) {
+                        /* general purpose DMA. nothing special required */
+                        printf("General DMA\n");
+                        int i;
+                        for(i = 0; i < hdma_transfer_length; ++i) {
+                            write_memory(hdma_destination++, 
+                                    read_memory(hdma_source++));
+                        }
+
+                        hardware_registers[HDMA1] = 0xFF;
+                        hardware_registers[HDMA2] = 0xFF;
+                        hardware_registers[HDMA3] = 0xFF;
+                        hardware_registers[HDMA4] = 0xFF;
+                        hardware_registers[HDMA5] = 0xFF;
+                    } else {
+                        /* hblank dma */
+
+                        hardware_registers[HDMA5] = (data & 0x7F);
+                        hdma_active = true;
+
+                        /* TODO is this correct? */
+                        u8 lcd_status = hardware_registers[STAT];
+                        if((lcd_status & 0x03) == 0x00) {
+                            /* currently in a hblank */
+                            hdma_transfer();
+                        }
+                    }
+
 					return;
 				}
 				case DMA:
@@ -656,8 +720,7 @@ void MBC_write(uint16_t location, uint8_t data)
 					if((hardware_registers[TAC] & 0x3) != (data & 0x3)) {
 						//frequency has changed
 						u32 timer_counter = 0;
-						switch(data & 0x3) {
-							case 0x0:
+						switch(data & 0x3) { case 0x0:
 								timer_counter = 1024;
 								break;
 							case 0x1:
@@ -689,7 +752,7 @@ void MBC_write(uint16_t location, uint8_t data)
 				}
                 case VBK:
                 {
-                    hardware_registers[VBK] = data;
+                    hardware_registers[VBK] = (data & 0x01);
                     update_selected_gameboy_vram_bank();
                     return;
                 }
@@ -795,12 +858,6 @@ uint8_t MBC_read(uint16_t location) {
                     u8 joypad_state = get_joypad_state();
                     return joypad_state;
                 }
-                case 0x51:
-                case 0x52:
-                case 0x53:
-                case 0x54:
-                case 0x55:
-                    return 0xFF;
 			}
             return hardware_registers[location - offset];
         } 

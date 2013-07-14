@@ -29,8 +29,8 @@ typedef struct {
     uint8_t* selected_rom;
     uint8_t* selected_ram;
 
-    int selected_rom_bank;
-    int selected_ram_bank;
+    u16 selected_rom_bank;
+    u16 selected_ram_bank;
 
     uint8_t (*read)(uint16_t);
     void (*write)(uint16_t, uint8_t);
