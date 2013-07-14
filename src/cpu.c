@@ -213,8 +213,8 @@ static bool cpu_initialized = false;
 static SDL_mutex* cpu_mutex = NULL;
 */
 //static struct timeval time_end, time_start;
-static u64 freq = 0;
-static u64 last_refresh = 0;
+//static u64 freq = 0;
+//static u64 last_refresh = 0;
 
 /*
 static HANDLE emulator_state_changed = NULL;
@@ -501,19 +501,6 @@ static void sync_refresh_rate( u32 *total_cycles );
 
 void change_emulator_state( EmulatorState new_state ) {
     emulator_state = new_state;
-    
-    char* emu_str;
-    switch( emulator_state ) {
-        case PAUSED: emu_str = "PAUSED"; break;
-        case STARTED: emu_str = "STARTED"; break;
-        case STOPPED: emu_str = "STOPPED"; break;
-        default: emu_str = "INVALID"; break;
-    }
-    //printf( "Emulator state changed to %s\n", emu_str );
-    
-	/*
-    assert( SetEvent( emulator_state_changed ) != 0 );
-	*/
 }
 
 void initialize_cpu()
@@ -717,6 +704,7 @@ static void update_lcd( u32 current_cycles )
 		if(scanline_counter <= 0) {
             /* TODO verify that this works...
                previously, the scanline was incremented immediately
+               */
 			/* increment the current scanline */
 			//int scanline = hardware_registers[LY]++;
 			
@@ -911,7 +899,7 @@ static int execute() {
 	/* variables that may be used by certain instructions */
     static u8 temp;
 	static Z80Register TR;
-    static s8 offset;
+    //static s8 offset;
 
 	/* load the next intruction */
     if(waiting_for_interrupt == true) {

@@ -54,6 +54,7 @@ int render_scanline()
 		render_sprites();
 	}
 	
+    return 0;
 }
 
 bool do_print_map =false;
@@ -209,7 +210,7 @@ int render_background(u8 lcd_control)
        
 		u8 pallete_index_offset = 0;
         u16 pallete_entry;			
-        u8 r, g, b;			
+        //u8 r, g, b;			
 		
         /*
 		if((high & bit) && (low & bit)) {
@@ -244,6 +245,7 @@ int render_background(u8 lcd_control)
 		update_screen_buffer( scanline, x_pixel, pallete_entry );
 		
 	}
+    return 0;
 }
 
 // only renders sprites on the current scanline
@@ -314,7 +316,7 @@ int render_sprites() {
             
             u8 high = gameboy_vram[vram_offset + sprite_address + 1];
             u8 low = gameboy_vram[vram_offset + sprite_address + 0];
-            u32 color;
+            //u32 color;
             
             int sprite_pixel;
 
@@ -379,4 +381,5 @@ int render_sprites() {
             }
         }        
     }
+    return 0;
 }

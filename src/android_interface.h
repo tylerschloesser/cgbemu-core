@@ -27,3 +27,6 @@ uint16_t* cgbemu_get_screen_buffer();
 
 int cgbemu_load_cartridge(const uint8_t* buffer, int size);
 void cgbemu_load_bios(uint8_t* buffer, int size);
+
+void cgbemu_save_state(uint8_t** buffer, int* size);
+void cgbemu_load_state(uint8_t* buffer, int size);

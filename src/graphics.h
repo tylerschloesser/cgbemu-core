@@ -25,6 +25,7 @@ extern SDL_Surface *surface;
 */
 
 int render_screen();
+int render_scanline();
 
 void initialize_graphics();
 void reinitialize_graphics();

@@ -31,6 +31,8 @@ uint8_t* gameboy_vram = NULL;
 uint8_t* gameboy_oam = NULL;
 uint8_t* gameboy_bios = NULL;
 
+void update_selected_cartridge_rom(Cartridge* cartridge);
+void update_selected_cartridge_ram(Cartridge* cartridge);
 //u8 bios[BIOS_SIZE];
 
 u8 zero_page[0x7F];             //127B
@@ -50,10 +52,6 @@ void MBC_write(uint16_t location, uint8_t data);
 uint8_t (*read_memory)(uint16_t);
 void (*write_memory)(uint16_t, uint8_t);
 
-/*
-void update_selected_cartridge_rom_bank();
-void update_selected_cartridge_ram_bank();
-*/
 void update_selected_gameboy_ram_bank();
 void update_selected_gameboy_vram_bank();
 
@@ -61,10 +59,6 @@ void update_selected_gameboy_vram_bank();
 void update_all_selected_banks() {
     update_selected_gameboy_vram_bank();
     update_selected_gameboy_ram_bank();
-/*
-    update_selected_cartridge_ram_bank();
-    update_selected_cartridge_rom_bank();
-    */
 }
 
 
@@ -213,11 +207,12 @@ void update_cartridge_banking(Cartridge* cartridge) {
 }
 
 void mbc0_write(uint16_t location, uint8_t data) {
-           
+    assert(false);           
 }
 
 uint8_t mbc0_read(uint16_t location) {
-
+    assert(false);
+    return 0;
 }
 
 void mbc1_write(uint16_t location, uint8_t data) {
@@ -306,7 +301,10 @@ uint8_t mbc1_read(uint16_t location) {
             location &= 0x0FFF;
             return selected_gameboy_ram_bank[location];
     }
- 
+     /* this shouldn't happen */
+    assert(false);
+    return 0; 
+
 }
 
 void mbc2_write(uint16_t location, uint8_t data) {
@@ -420,8 +418,12 @@ uint8_t mbc3_read(uint16_t location) {
             location &= 0x0FFF;
             return selected_gameboy_ram_bank[location];
     }
- 
+
+    /* this shouldn't happen */
+    assert(false);
+    return 0; 
 }
+
 void mbc4_write(uint16_t location, uint8_t data) {
 
     assert(false);
@@ -437,7 +439,7 @@ void update_selected_cartridge_rom_bank() {
     u32 rom_bank = mbc_control[ROM_BANK_LOW];
     rom_bank |= mbc_control[ROM_BANK_HIGH] << 8;
 
-    /* TODO this should only happen in MBC1 (i think) 
+    // TODO this should only happen in MBC1 (i think) 
 
     if(rom_bank == 0)
         rom_bank = 1;
@@ -565,7 +567,8 @@ uint8_t mbc5_read(uint16_t location) {
             return selected_gameboy_ram_bank[location];
     }
              
-
+    assert(false);
+    return 0;
 }
 
 
@@ -635,7 +638,7 @@ void MBC_write(uint16_t location, uint8_t data)
 				case HDMA5:
 				{
                     if(hdma_active == true) {
-                        if(data & 0x80 == 0x00) {
+                        if((data & 0x80) == 0x00) {
                             /* cancel the DMA */
                             hdma_active = false;
                             hardware_registers[HDMA5] = 0xFF;
@@ -821,12 +824,6 @@ uint8_t MBC_read(uint16_t location) {
 	assert( memory_initialized == true );
 
     if(location < 0xE000) {
-        //if(location == 0xCFB3 || location == 0xcfb1 || location == 0xcfb2) {
-        if(location == 0xcf67) {
-            uint8_t data = cartridge->read(location);
-            //printf("read %X from %X\n", data, location);
-            //cpu_step = true;
-        }
         return cartridge->read(location);
     }
    	else if (location < 0x10000) /* E000-FFFF */

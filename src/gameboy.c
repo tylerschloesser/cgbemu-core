@@ -6,6 +6,8 @@
 
 #include "cartridge.h"
 
+#include "screen.h"
+
 void gameboy_toggle_speed() {
     fullspeed = !fullspeed;
 }
@@ -62,6 +64,8 @@ void gameboy_toggle_button( Button button, bool pressed )
 		case B:
 			gb_key = JOYPAD_B;
 			break;
+        case INVALID:
+            return;
 	}
 	
 	if( gb_key != -1 )

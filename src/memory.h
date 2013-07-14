@@ -38,6 +38,9 @@ enum MBC_control {
 };
 
 
+void save_state(uint8_t** buffer);
+void load_state(uint8_t* buffer, int size);
+
 void mbc0_write(uint16_t location, uint8_t data);
 uint8_t mbc0_read(uint16_t location);
 void mbc1_write(uint16_t location, uint8_t data);
