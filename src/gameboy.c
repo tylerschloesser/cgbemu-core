@@ -8,13 +8,71 @@
 
 #include "screen.h"
 
+GameboyColor* gb = NULL;
+
 void gameboy_toggle_speed() {
     fullspeed = !fullspeed;
 }
 
+static bool gameboy_initialized = false;
+void initialize_gameboy(void)
+{
+    assert(gameboy_initialized == false);
+    gb = (GameboyColor*)calloc(sizeof(GameboyColor), 1);
+
+    assert(gb);
+    if(!gb) return;
+
+    gb->ram  = (uint8_t*)calloc(GAMEBOY_RAM_SIZE,  1);
+    gb->vram = (uint8_t*)calloc(GAMEBOY_VRAM_SIZE, 1);
+    gb->oam  = (uint8_t*)calloc(GAMEBOY_OAM_SIZE,  1);
+    gb->bios = (uint8_t*)calloc(GAMEBOY_BIOS_SIZE, 1);
+
+    gb->bg_pallete = (uint8_t*)calloc(GAMEBOY_BG_PALLETE_SIZE, 1);
+    gb->ob_pallete = (uint8_t*)calloc(GAMEBOY_OB_PALLETE_SIZE, 1);
+
+    gb->hram = (uint8_t*)calloc(GAMEBOY_HRAM_SIZE, 1);
+    gb->hw_registers = (uint8_t*)calloc(GAMEBOY_HW_REGISTERS_SIZE, 1);
+
+    assert(gb->ram);
+    assert(gb->vram);
+    assert(gb->oam);
+    assert(gb->bios);
+
+    assert(gb->bg_pallete);
+    assert(gb->ob_pallete);
+    assert(gb->hram);
+    assert(gb->hw_registers);
+
+    
+    gb->hw_registers[SVBK] = 1; /* selected ram bank */
+    gb->hw_registers[VBK]  = 0; /* selected vram bank */    
+    gb->hw_registers[BLCK] = 0; /* bios */
+
+    gameboy_update_selected_ram_bank();
+    gameboy_update_selected_vram_bank();
+
+    gameboy_initialized = true;
+}
+
+void gameboy_update_selected_ram_bank()
+{
+    u32 ram_bank = gb->hw_registers[SVBK];
+    gb->selected_ram = &gb->ram[ram_bank * 0x1000];
+}
+
+void gameboy_update_selected_vram_bank()
+{
+    u32 vram_bank = gb->hw_registers[VBK];
+    gb->selected_vram = &gb->vram[vram_bank * 0x2000];
+}
+
+
 void gameboy_power_on() 
 {
 
+    
+    initialize_gameboy();
 	initialize_cpu();
 	initialize_memory();
 	initialize_joypad();
@@ -137,17 +195,21 @@ void save_state(uint8_t** buffer) {
     memcpy_id(buffer, cartridge->ram, cartridge->ram_size);
     memcpy_id(buffer, cartridge->rom, cartridge->rom_size);
 
-    memcpy_id(buffer, pallete, 0x40);
-    memcpy_id(buffer, sprite_pallete, 0x40);
-    memcpy_id(buffer, gameboy_ram, GAMEBOY_RAM_SIZE);
-    memcpy_id(buffer, gameboy_vram, GAMEBOY_VRAM_SIZE);
-    memcpy_id(buffer, gameboy_oam, GAMEBOY_OAM_SIZE);
-    memcpy_id(buffer, gameboy_bios, GAMEBOY_BIOS_SIZE);
-    memcpy_id(buffer, zero_page, 0x7F);
-    memcpy_id(buffer, &interrupt_enable, 1);
-    memcpy_id(buffer, hardware_registers, 0x80);
-    memcpy_id(buffer, &IME, 1);
+    memcpy_id(buffer, gb->bg_pallete, GAMEBOY_BG_PALLETE_SIZE);
+    memcpy_id(buffer, gb->ob_pallete, GAMEBOY_OB_PALLETE_SIZE);
+    memcpy_id(buffer, gb->ram, GAMEBOY_RAM_SIZE);
+    memcpy_id(buffer, gb->vram, GAMEBOY_VRAM_SIZE);
+    memcpy_id(buffer, gb->oam, GAMEBOY_OAM_SIZE);
+    memcpy_id(buffer, gb->bios, GAMEBOY_BIOS_SIZE);
+    memcpy_id(buffer, gb->hram, GAMEBOY_HRAM_SIZE);
+    memcpy_id(buffer, &(gb->ie_register), 1);
+    memcpy_id(buffer, gb->hw_registers, 0x80);
+    memcpy_id(buffer, &(gb->ime_flag), 1);
+
+    //TODO THIS NEEDS TO BE FIXED
+    /*
     memcpy_id(buffer, mbc_control, 4);
+    */
 
     /* reset the buffer pointer */
     (*buffer) = buffer_original;
@@ -171,17 +233,19 @@ void load_state(uint8_t* buffer, int size) {
     memcpy_is(cartridge->ram, &buffer, cartridge->ram_size);
     memcpy_is(cartridge->rom, &buffer, cartridge->rom_size);
 
-    memcpy_is(pallete, &buffer, 0x40);
-    memcpy_is(sprite_pallete, &buffer, 0x40);
-    memcpy_is(gameboy_ram, &buffer, GAMEBOY_RAM_SIZE);
-    memcpy_is(gameboy_vram, &buffer, GAMEBOY_VRAM_SIZE);
-    memcpy_is(gameboy_oam, &buffer, GAMEBOY_OAM_SIZE);
-    memcpy_is(gameboy_bios, &buffer, GAMEBOY_BIOS_SIZE);
-    memcpy_is(zero_page, &buffer, 0x7F);
-    memcpy_is(&interrupt_enable, &buffer, 1);
-    memcpy_is(hardware_registers, &buffer, 0x80);
-    memcpy_is(&IME, &buffer, 1);
+    memcpy_is(gb->bg_pallete, &buffer, 0x40);
+    memcpy_is(gb->ob_pallete, &buffer, 0x40);
+    memcpy_is(gb->ram, &buffer, GAMEBOY_RAM_SIZE);
+    memcpy_is(gb->vram, &buffer, GAMEBOY_VRAM_SIZE);
+    memcpy_is(gb->oam, &buffer, GAMEBOY_OAM_SIZE);
+    memcpy_is(gb->bios, &buffer, GAMEBOY_BIOS_SIZE);
+    memcpy_is(gb->hram, &buffer, 0x7F);
+    memcpy_is(&(gb->ie_register), &buffer, 1);
+    memcpy_is(gb->hw_registers, &buffer, 0x80);
+    memcpy_is(&(gb->ime_flag), &buffer, 1);
+    /*
     memcpy_is(mbc_control, &buffer, 4);
+    */
  
     set_cpu_state(state);
 

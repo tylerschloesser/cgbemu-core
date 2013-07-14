@@ -904,7 +904,7 @@ case 0xD8: //RET C
 		CLOCK_CYCLES(8);
 	}
 case 0xD9: //RETI
-	IME = 1;
+	gb->ime_flag = 1;
 	PC.LO = READ(SP.W++);
 	PC.HI = READ(SP.W++);
 	CLOCK_CYCLES(16);
@@ -1081,7 +1081,7 @@ case 0xF2: //LD A, (C)
 	REG_A = READ(0xFF00+REG_C);
 	CLOCK_CYCLES(8);
 case 0xF3: //DI
-	IME = 0;
+	gb->ime_flag = 0;
 	CLOCK_CYCLES(4);
 case 0xF4:
 	INVALID_OPCODE(0xF4);
@@ -1141,7 +1141,7 @@ case 0xFA: //LD A, (a16)
 	REG_A = READ(TR.W);
 	CLOCK_CYCLES(16);
 case 0xFB: //EI
-	IME = 1;
+	gb->ime_flag = 1;
 	CLOCK_CYCLES(4);
 case 0xFC:
 	INVALID_OPCODE(0xFC);

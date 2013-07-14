@@ -9,12 +9,15 @@
 
 #define GAMEBOY_RAM_SIZE 0x8000
 #define GAMEBOY_VRAM_SIZE 0x4000
+/* TODO this is nNOT the correct OAM size */
 #define GAMEBOY_OAM_SIZE 0x20000  //128KB
 
 #define GAMEBOY_BIOS_SIZE 0x900
 
+/*
 extern int cartridge_ram_size;
 extern int cartridge_rom_size;
+*/
 
 extern uint8_t (*read_memory)(uint16_t);
 extern void (*write_memory)(uint16_t, uint8_t);
@@ -25,7 +28,9 @@ void update_selected_cartridge_banks();
 void hdma_transfer(void);
 
 //temp
+/*
 extern uint8_t* selected_gameboy_vram_bank;
+*/
 
 //TODO TEMP
 bool in_bios;
@@ -124,28 +129,39 @@ enum hardware_register {
     IE      = 0xFF  //interrupt enable
 };
 
-
+/*
 extern uint8_t* cartridge_ram;
 extern uint8_t* cartridge_rom;
+*/
 
+/*
 extern u8 pallete[0x40]; //8 palletes - 4 colors per pallete - 2 bytes per color
 extern u8 sprite_pallete[0x40];
+*/
 
+/*
 extern uint8_t* gameboy_ram;
 extern uint8_t* gameboy_vram;
 extern uint8_t* gameboy_oam;
 extern uint8_t* gameboy_bios;
+*/
+
 
 //extern u8 bios[BIOS_SIZE];
 
-
+/*
 extern u8 zero_page[0x7F];             //127B
 extern u8 interrupt_enable;
 extern u8 hardware_registers[0x80];    //128B
-
+*/
+/*
 extern u8 IME;							//Interrupt Master Enable Flag (used by EI, DI, RETI, <INT>)
 	
+*/
+
+/*
 extern u8 mbc_control[4];
+*/
 
 enum lcd_control {
 	LCD_DISPLAY_ENABLE = 0x80,

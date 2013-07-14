@@ -23,6 +23,7 @@ uint8_t* cartridge_rom = NULL;
 uint8_t* cartridge_ram = NULL;
 */
 
+/*
 u8 pallete[PALLETE_SIZE];
 u8 sprite_pallete[SPRITE_PALLETE_SIZE];
 
@@ -30,19 +31,22 @@ uint8_t* gameboy_ram = NULL;
 uint8_t* gameboy_vram = NULL;
 uint8_t* gameboy_oam = NULL;
 uint8_t* gameboy_bios = NULL;
+*/
 
 void update_selected_cartridge_rom(Cartridge* cartridge);
 void update_selected_cartridge_ram(Cartridge* cartridge);
 //u8 bios[BIOS_SIZE];
 
+/*
 u8 zero_page[0x7F];             //127B
 u8 interrupt_enable;
 u8 hardware_registers[0x80];    //128B
+*/
 
 
-u8 IME; /* interrupt master enable flag */
+//u8 IME; /* interrupt master enable flag */
 	
-u8 mbc_control[4];
+//u8 mbc_control[4];
 
 static bool memory_initialized = false;
 
@@ -52,13 +56,15 @@ void MBC_write(uint16_t location, uint8_t data);
 uint8_t (*read_memory)(uint16_t);
 void (*write_memory)(uint16_t, uint8_t);
 
+/*
 void update_selected_gameboy_ram_bank();
 void update_selected_gameboy_vram_bank();
+*/
 
 
 void update_all_selected_banks() {
-    update_selected_gameboy_vram_bank();
-    update_selected_gameboy_ram_bank();
+    gameboy_update_selected_vram_bank();
+    gameboy_update_selected_ram_bank();
 }
 
 
@@ -70,13 +76,14 @@ void update_selected_cartridge_banks() {
 void hdma_transfer(void)
 {
     assert(cartridge);
-    assert((hardware_registers[HDMA5] & 0x80) == 0x00);
+    assert((gb->hw_registers[HDMA5] & 0x80) == 0x00);
+    /*
     fprintf(stderr, "hdma_transfer src=%04X dst=%04X len=%04X rom_bank=%X\n", 
             hdma_source,
             hdma_destination,
             hdma_transfer_length,
             cartridge->selected_rom_bank);
-
+    */
     int i;
     for(i = 0; i < 0x10; ++i) {
         write_memory(hdma_destination++, read_memory(hdma_source++));
@@ -84,7 +91,7 @@ void hdma_transfer(void)
     hdma_transfer_length -= 0x10;
 
     /* this looks weird, but i assure you it makes sense */
-    if(--hardware_registers[HDMA5] == 0xFF) {
+    if(--gb->hw_registers[HDMA5] == 0xFF) {
         /* transfer is complete */
         hdma_active = false;
     }
@@ -94,6 +101,7 @@ void initialize_memory(GameboyModel model)
 {
 	assert( memory_initialized == false );
 
+    /*
     assert(gameboy_ram == NULL);
     assert(gameboy_vram == NULL);
     assert(gameboy_oam == NULL);
@@ -108,12 +116,13 @@ void initialize_memory(GameboyModel model)
     assert(gameboy_vram != NULL);
     assert(gameboy_oam != NULL);
     assert(gameboy_bios != NULL);
-
+    */
 
     write_memory = &MBC_write;
     read_memory = &MBC_read;
     
 	// get rid of all these numbers...
+    /*
     int i;
 	for(i = 0; i < 0x7F; ++i) {
 		zero_page[i] = 0;
@@ -129,11 +138,13 @@ void initialize_memory(GameboyModel model)
 	for(i = 0; i < 4; ++i) {
 		mbc_control[i] = 0;
 	}
+    */
 	
 	/* do special memory stuff here */
-	hardware_registers[SVBK] = 1; /* selected ram bank should never be 0 */
-	hardware_registers[BLCK] = 0; /* enable bios */
-    hardware_registers[VBK] = 0;
+    
+	//hardware_registers[SVBK] = 1; /* selected ram bank should never be 0 */
+	//hardware_registers[BLCK] = 0; /* enable bios */
+    //hardware_registers[VBK] = 0;
 
     update_all_selected_banks();
    
@@ -155,8 +166,10 @@ void reinitialize_memory(GameboyModel model)
 uint8_t* selected_cartridge_rom_bank = NULL;
 uint8_t* selected_cartridge_ram_bank = NULL;
 */
+/*
 uint8_t* selected_gameboy_vram_bank = NULL;
 uint8_t* selected_gameboy_ram_bank = NULL;
+*/
 
 
 void update_selected_cartridge_rom(Cartridge* cartridge) {
@@ -242,7 +255,8 @@ void mbc1_write(uint16_t location, uint8_t data) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF;
-            selected_gameboy_vram_bank[location] = data;
+            gb->selected_vram[location] = data;
+            //selected_gameboy_vram_bank[location] = data;
             break;
         case 0xA:
         case 0xB:
@@ -254,11 +268,13 @@ void mbc1_write(uint16_t location, uint8_t data) {
             break;
         case 0xC:
             location &= 0x0FFF;
-            gameboy_ram[location] = data;
+            gb->ram[location] = data;
+            //gameboy_ram[location] = data;
             break;
         case 0xD:
             location &= 0x0FFF;
-            selected_gameboy_ram_bank[location] = data;
+            //selected_gameboy_ram_bank[location] = data;
+            gb->selected_ram[location] = data;
             break;
 
     } 
@@ -276,7 +292,7 @@ uint8_t mbc1_read(uint16_t location) {
 
             //DIRTY HAX. FIX THIS
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
-                return gameboy_bios[location];
+                return gb->bios[location];
 
             return cartridge->rom[location];
         }
@@ -289,17 +305,20 @@ uint8_t mbc1_read(uint16_t location) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF; /* ~0xE000 */
-            return selected_gameboy_vram_bank[location];
+            return gb->selected_vram[location];
+            //return selected_gameboy_vram_bank[location];
         case 0xA:
         case 0xB:
             location &= 0x1FFF;
             return cartridge->selected_ram[location];
         case 0xC:
             location &= 0x0FFF; /* ~0xF000 */
-            return gameboy_ram[location];
+            //return gameboy_ram[location];
+            return gb->ram[location];
         case 0xD:
             location &= 0x0FFF;
-            return selected_gameboy_ram_bank[location];
+            //return selected_gameboy_ram_bank[location];
+            return gb->selected_ram[location];
     }
      /* this shouldn't happen */
     assert(false);
@@ -350,7 +369,8 @@ void mbc3_write(uint16_t location, uint8_t data) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF;
-            selected_gameboy_vram_bank[location] = data;
+            //selected_gameboy_vram_bank[location] = data;
+            gb->selected_vram[location] = data;
             break;
         case 0xA:
         case 0xB:
@@ -369,11 +389,13 @@ void mbc3_write(uint16_t location, uint8_t data) {
         }
         case 0xC:
             location &= 0x0FFF;
-            gameboy_ram[location] = data;
+            //gameboy_ram[location] = data;
+            gb->ram[location] = data;
             break;
         case 0xD:
             location &= 0x0FFF;
-            selected_gameboy_ram_bank[location] = data;
+            //selected_gameboy_ram_bank[location] = data;
+            gb->selected_ram[location] = data;
             break;
     } 
 }
@@ -390,7 +412,7 @@ uint8_t mbc3_read(uint16_t location) {
 
             //DIRTY HAX. FIX THIS
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
-                return gameboy_bios[location];
+                return gb->bios[location];
 
             return cartridge->rom[location];
         }
@@ -403,7 +425,8 @@ uint8_t mbc3_read(uint16_t location) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF; /* ~0xE000 */
-            return selected_gameboy_vram_bank[location];
+            //return selected_gameboy_vram_bank[location];
+            return gb->selected_vram[location];
         case 0xA:
         case 0xB:
             if(cartridge->rtc_register) {
@@ -413,10 +436,10 @@ uint8_t mbc3_read(uint16_t location) {
             return cartridge->selected_ram[location];
         case 0xC:
             location &= 0x0FFF; /* ~0xF000 */
-            return gameboy_ram[location];
+            return gb->ram[location];
         case 0xD:
             location &= 0x0FFF;
-            return selected_gameboy_ram_bank[location];
+            return gb->selected_ram[location];
     }
 
     /* this shouldn't happen */
@@ -458,21 +481,22 @@ void update_selected_cartridge_ram_bank() {
 }
 */
 
-
+/*
 void update_selected_gameboy_ram_bank() {
 
-    u32 ram_bank = hardware_registers[SVBK];
+    u32 ram_bank = gb->hw_registers[SVBK];
     selected_gameboy_ram_bank = &gameboy_ram[ram_bank * 0x1000];
 
 }
 
 void update_selected_gameboy_vram_bank() {
-    u32 vram_bank = hardware_registers[VBK];
+    u32 vram_bank = gb->hw_registers[VBK];
     //printf("switching to vram_bank %i\n", vram_bank);
 
     selected_gameboy_vram_bank = 
         &gameboy_vram[vram_bank * 0x2000];
 }
+*/
 
 
 
@@ -505,7 +529,7 @@ void mbc5_write(uint16_t location, uint8_t data) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF;
-            selected_gameboy_vram_bank[location] = data;
+            gb->selected_vram[location] = data;
             break;
         case 0xA:
         case 0xB:
@@ -517,11 +541,11 @@ void mbc5_write(uint16_t location, uint8_t data) {
             break;
         case 0xC:
             location &= 0x0FFF;
-            gameboy_ram[location] = data;
+            gb->ram[location] = data;
             break;
         case 0xD:
             location &= 0x0FFF;
-            selected_gameboy_ram_bank[location] = data;
+            gb->selected_ram[location] = data;
             break;
     }
 }
@@ -538,7 +562,7 @@ uint8_t mbc5_read(uint16_t location) {
 
             //HAXXY HAX
             if(in_bios && (location < 0x100 || (location > 0x1FF && location < 0x900)))
-                return gameboy_bios[location];
+                return gb->bios[location];
 
             return cartridge->rom[location];
         }
@@ -551,7 +575,7 @@ uint8_t mbc5_read(uint16_t location) {
         case 0x8:
         case 0x9:
             location &= 0x1FFF; /* ~0xE000 */
-            return selected_gameboy_vram_bank[location];
+            return gb->selected_vram[location];
         case 0xA:
         case 0xB:
             //TODO do something different here...
@@ -561,10 +585,10 @@ uint8_t mbc5_read(uint16_t location) {
             return cartridge->selected_ram[location];
         case 0xC:
             location &= 0x0FFF; /* ~0xF000 */
-            return gameboy_ram[location];
+            return gb->ram[location];
         case 0xD:
             location &= 0x0FFF;
-            return selected_gameboy_ram_bank[location];
+            return gb->selected_ram[location];
     }
              
     assert(false);
@@ -608,7 +632,7 @@ void MBC_write(uint16_t location, uint8_t data)
 		{
 			/* FE00-FE9F oject attribute memory */
             int offset = 0xFE00;
-            gameboy_oam[location - offset] = data;	
+            gb->oam[location - offset] = data;	
         }
 		else if (location < 0xFF00) 
 		{
@@ -627,7 +651,7 @@ void MBC_write(uint16_t location, uint8_t data)
                     
                     if((data & 0x30) == 0) {
                         // ? both button and dir keys selected?
-                        hardware_registers[P1] |= (data & 0x0F);
+                        gb->hw_registers[P1] |= (data & 0x0F);
                     } else if((data & 0x10) == 0) {
                         joypad_select_direction_keys();
                     } else if((data & 0x20) == 0) {
@@ -641,16 +665,16 @@ void MBC_write(uint16_t location, uint8_t data)
                         if((data & 0x80) == 0x00) {
                             /* cancel the DMA */
                             hdma_active = false;
-                            hardware_registers[HDMA5] = 0xFF;
+                            gb->hw_registers[HDMA5] = 0xFF;
                         } else {
                             /* TODO not sure what this does... */
-                            hardware_registers[HDMA5] = (data & 0x7F); 
+                            gb->hw_registers[HDMA5] = (data & 0x7F); 
                         }
                         return;
                     }
 
                     /* TODO this is stupid... fix this */
-                    u8 *dma_registers = &hardware_registers[HDMA1];
+                    u8 *dma_registers = &gb->hw_registers[HDMA1];
                     hdma_source = (*dma_registers) << 8;
                     hdma_source |= (*(++dma_registers));
                     hdma_destination = (*(++dma_registers)) << 8;
@@ -675,19 +699,19 @@ void MBC_write(uint16_t location, uint8_t data)
                                     read_memory(hdma_source++));
                         }
 
-                        hardware_registers[HDMA1] = 0xFF;
-                        hardware_registers[HDMA2] = 0xFF;
-                        hardware_registers[HDMA3] = 0xFF;
-                        hardware_registers[HDMA4] = 0xFF;
-                        hardware_registers[HDMA5] = 0xFF;
+                        gb->hw_registers[HDMA1] = 0xFF;
+                        gb->hw_registers[HDMA2] = 0xFF;
+                        gb->hw_registers[HDMA3] = 0xFF;
+                        gb->hw_registers[HDMA4] = 0xFF;
+                        gb->hw_registers[HDMA5] = 0xFF;
                     } else {
                         /* hblank dma */
 
-                        hardware_registers[HDMA5] = (data & 0x7F);
+                        gb->hw_registers[HDMA5] = (data & 0x7F);
                         hdma_active = true;
 
                         /* TODO is this correct? */
-                        u8 lcd_status = hardware_registers[STAT];
+                        u8 lcd_status = gb->hw_registers[STAT];
                         if((lcd_status & 0x03) == 0x00) {
                             /* currently in a hblank */
                             hdma_transfer();
@@ -705,7 +729,7 @@ void MBC_write(uint16_t location, uint8_t data)
 							write_memory(0xFE00 + i, read_memory(dma_source + i));
 					}
                     /* temp */
-                    hardware_registers[DMA] = data;
+                    gb->hw_registers[DMA] = data;
 					return;
 				}
 				case DIV:
@@ -720,7 +744,7 @@ void MBC_write(uint16_t location, uint8_t data)
                     //if(data == 0x05) cpu_step = true;
 
 					//update timer control
-					if((hardware_registers[TAC] & 0x3) != (data & 0x3)) {
+					if((gb->hw_registers[TAC] & 0x3) != (data & 0x3)) {
 						//frequency has changed
 						u32 timer_counter = 0;
 						switch(data & 0x3) { case 0x0:
@@ -749,38 +773,40 @@ void MBC_write(uint16_t location, uint8_t data)
 					if(data == 0) {
 						data = 1;
 					}
-                    hardware_registers[SVBK] = data;
-                    update_selected_gameboy_ram_bank();
+                    gb->hw_registers[SVBK] = data;
+                    gameboy_update_selected_ram_bank();
+                    //update_selected_gameboy_ram_bank();
                     return;
 				}
                 case VBK:
                 {
-                    hardware_registers[VBK] = (data & 0x01);
-                    update_selected_gameboy_vram_bank();
+                    gb->hw_registers[VBK] = (data & 0x01);
+                    //update_selected_gameboy_vram_bank();
+                    gameboy_update_selected_vram_bank();
                     return;
                 }
 				case BCPD:
 				{
 					/* background pallete data */
-					int pallete_index = hardware_registers[BCPS] & 0x3F;
-					pallete[pallete_index] = data;
-					if(hardware_registers[BCPS] & 0x80) {
+					int pallete_index = gb->hw_registers[BCPS] & 0x3F;
+					gb->bg_pallete[pallete_index] = data;
+					if(gb->hw_registers[BCPS] & 0x80) {
 						/* auto increment */
-						++hardware_registers[BCPS];
+						++gb->hw_registers[BCPS];
 					}
-					hardware_registers[BCPS] &= 0xBF;
+					gb->hw_registers[BCPS] &= 0xBF;
 					// return because 
 					return;
 				}
 				case OCPD:
 				{
 					// sprite pallete data
-					int pallete_index = hardware_registers[OCPS] & 0x3F;
-					sprite_pallete[pallete_index] = data;
-					if(hardware_registers[OCPS] & 0x80) {
-						++hardware_registers[OCPS];
+					int pallete_index = gb->hw_registers[OCPS] & 0x3F;
+					gb->ob_pallete[pallete_index] = data;
+					if(gb->hw_registers[OCPS] & 0x80) {
+						++gb->hw_registers[OCPS];
 					}
-					hardware_registers[OCPS] &= 0xBF;
+					gb->hw_registers[OCPS] &= 0xBF;
 					return;
 				}
 				case BLCK:
@@ -795,18 +821,18 @@ void MBC_write(uint16_t location, uint8_t data)
 				}
 			}
 			
-			hardware_registers[location - offset] = data;
+			gb->hw_registers[location - offset] = data;
         }
 		else if(location < 0xFFFF) 
 		{
             /* FF80-FFFE zero page */
             int offset = 0xFF80;
-            zero_page[location - offset] = data;
+            gb->hram[location - offset] = data;
         } 
 		else if(location == 0xFFFF) 
 		{
             /* FFFF interrupt enable */
-            interrupt_enable = data;
+            gb->ie_register = data;
         } 
 		else 
 		{
@@ -837,7 +863,7 @@ uint8_t MBC_read(uint16_t location) {
 		{
             /* FE00-FE9F object attribute memory */
             int offset = 0xFE00;
-            return gameboy_oam[location - offset];
+            return gb->oam[location - offset];
         } 
 		else if(location < 0xFF00) 
 		{
@@ -856,18 +882,18 @@ uint8_t MBC_read(uint16_t location) {
                     return joypad_state;
                 }
 			}
-            return hardware_registers[location - offset];
+            return gb->hw_registers[location - offset];
         } 
 		else if(location < 0xFFFF) 
 		{
             /* FF80-FFFE zero page */
             int offset = 0xFF80;
-            return zero_page[location - offset];
+            return gb->hram[location - offset];
         } 
 		else if (location == 0xFFFF) 
 		{
             /* FFFF interrupt enable */
-            return interrupt_enable;
+            return gb->ie_register; 
         } 
 		else 
 		{

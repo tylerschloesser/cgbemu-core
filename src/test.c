@@ -209,12 +209,14 @@ void reshape (int w, int h)
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
+/*
 void dump_vram()
 {
     FILE* dump = fopen("vram_dump.bin", "w");
     fwrite(selected_gameboy_vram_bank, 1, 0x2000, dump);
     fclose(dump);
 }
+*/
 
 void processKeyboard(int key, bool down)
 {
@@ -239,7 +241,7 @@ void processKeyboard(int key, bool down)
         case 's':
             if(!down) cpu_step = !cpu_step;
         case 'd':
-            dump_vram();
+            //dump_vram();
             break;
         case 'm':
             print_map();

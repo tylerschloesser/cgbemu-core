@@ -20,7 +20,7 @@ void initialize_joypad()
 	assert( initialized == false );
 	
     joypad_state = 0xFF;
-    hardware_registers[P1] |= 0xF;
+    gb->hw_registers[P1] |= 0xF;
 	
 	initialized = true;
 }
@@ -37,7 +37,7 @@ u8 get_joypad_state() {
 
 	assert( initialized == true );
 
-    u8 joypad_select = hardware_registers[P1] & 0x30;
+    u8 joypad_select = gb->hw_registers[P1] & 0x30;
     
     if((joypad_select & 0x30) == 0) {
         // invalid setting (select both button and dir keys?)
@@ -68,7 +68,7 @@ void joypad_down(int gb_key) {
 	
     joypad_state &= ~(1 << gb_key);
     
-    hardware_registers[P1] |= (get_joypad_state() & 0x0F);
+    gb->hw_registers[P1] |= (get_joypad_state() & 0x0F);
     
     //cpu_interrupt(JOYPAD_INTERRUPT);
 }
@@ -80,7 +80,7 @@ void joypad_up(int gb_key) {
 
     joypad_state |= (1 << gb_key);
      
-    hardware_registers[P1] |= (get_joypad_state() & 0x0F);
+    gb->hw_registers[P1] |= (get_joypad_state() & 0x0F);
 }
 
 /**
@@ -91,10 +91,10 @@ void joypad_select_button_keys() {
 	assert( initialized == true );
 	
     // clear last 4 bits
-    //hardware_registers[P1] &= 0xF0;
-    hardware_registers[P1] = ~0x20;
+    //gb->hw_registers[P1] &= 0xF0;
+    gb->hw_registers[P1] = ~0x20;
     // update the joypad register with the current state of the buttons
-    hardware_registers[P1] |= ((joypad_state >> 4) & 0x0F);
+    gb->hw_registers[P1] |= ((joypad_state >> 4) & 0x0F);
 
 }
 
@@ -106,8 +106,8 @@ void joypad_select_direction_keys() {
 	assert( initialized == true );
 	
     // clear the last 4 bits
-    //hardware_registers[P1] &= 0xF0;
-    hardware_registers[P1] = ~0x10;
+    //gb->hw_registers[P1] &= 0xF0;
+    gb->hw_registers[P1] = ~0x10;
     
-    hardware_registers[P1] |= ((joypad_state >> 0) & 0x0F);  
+    gb->hw_registers[P1] |= ((joypad_state >> 0) & 0x0F);  
 }

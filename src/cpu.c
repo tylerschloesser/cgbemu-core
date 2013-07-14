@@ -610,20 +610,20 @@ static void interrupt( InterruptType type ) {
     waiting_for_interrupt = false;
     switch( type ) {
         case VBLANK:
-            hardware_registers[IF] |= 0x01;
+            gb->hw_registers[IF] |= 0x01;
 			stop_cpu();
             break;
         case LCD_STATUS:
-            hardware_registers[IF] |= 0x02;
+            gb->hw_registers[IF] |= 0x02;
             break;
         case TIMER:
-            hardware_registers[IF] |= 0x04;
+            gb->hw_registers[IF] |= 0x04;
             break;
         case SERIAL:
-            hardware_registers[IF] |= 0x08;
+            gb->hw_registers[IF] |= 0x08;
             break;
         case JOYPAD:
-			hardware_registers[IF] |= 0x10;
+			gb->hw_registers[IF] |= 0x10;
             break;
     }
 }
@@ -631,20 +631,20 @@ static void interrupt( InterruptType type ) {
 static void update_lcd_status()
 {
 	
-	u8 lcd_status = hardware_registers[STAT] & 0xFC; 	/* clear 2 LSB */
-	if((hardware_registers[LCDC] & LCD_DISPLAY_ENABLE) == 0) {
+	u8 lcd_status = gb->hw_registers[STAT] & 0xFC; 	/* clear 2 LSB */
+	if((gb->hw_registers[LCDC] & LCD_DISPLAY_ENABLE) == 0) {
 		/* LCD is disabled */
 		scanline_counter = 456;
-		hardware_registers[LY] = 0;
+		gb->hw_registers[LY] = 0;
 		lcd_status |= 1;
 	} else {
 		/* LCD is enabled */
-		u8 lcd_mode = hardware_registers[STAT] & 0x3;
+		u8 lcd_mode = gb->hw_registers[STAT] & 0x3;
 		u8 new_lcd_mode = 0;
 		bool lcd_interrupt = false;
 		
         /* TODO shouldn't this be >= 144? */
-		if(hardware_registers[LY] > 144) {
+		if(gb->hw_registers[LY] > 144) {
 			/* LCD is in vertical blank, set mode to 1 */
 			new_lcd_mode = 1;
 			lcd_status |= 1;
@@ -664,7 +664,7 @@ static void update_lcd_status()
 				/* mode 0 */
 				new_lcd_mode = 0;
                 
-                u8 scanline = hardware_registers[LY];
+                u8 scanline = gb->hw_registers[LY];
 				if(lcd_status & 0x8) {
                     /* i don't think there is an interrupt for
                        lines past 143... */
@@ -689,7 +689,7 @@ static void update_lcd_status()
 	}
 
 	
-	hardware_registers[STAT] = lcd_status;
+	gb->hw_registers[STAT] = lcd_status;
 }
 
 
@@ -697,7 +697,7 @@ static void update_lcd_status()
 
 static void update_lcd( u32 current_cycles )
 {
-	if(hardware_registers[LCDC] & LCD_DISPLAY_ENABLE) {
+	if(gb->hw_registers[LCDC] & LCD_DISPLAY_ENABLE) {
 
 		scanline_counter -= current_cycles;
 		
@@ -706,14 +706,14 @@ static void update_lcd( u32 current_cycles )
                previously, the scanline was incremented immediately
                */
 			/* increment the current scanline */
-			//int scanline = hardware_registers[LY]++;
+			//int scanline = gb->hw_registers[LY]++;
 			
 			/* reset the scanline counter */
 			scanline_counter = 456;
 			
 			
 			
-			if(hardware_registers[LY] == 144) {
+			if(gb->hw_registers[LY] == 144) {
             //if(scanline == 144) {
 
 				/* enter vertical blank period */
@@ -723,33 +723,33 @@ static void update_lcd( u32 current_cycles )
 				*/
 				
 	
-			} else if(hardware_registers[LY] > 153) {
+			} else if(gb->hw_registers[LY] > 153) {
 			//} else if(scanline > 153) {
 				/* scanline back to 0 (end of vertical blank) */
 				
 				/* TODO figure out a cleaner way to do this
-				 * previously, hardware_registers[LY] was set to 0, but then the 
+				 * previously, gb->hw_registers[LY] was set to 0, but then the 
 				 * first line wouldn't be drawn because the scanline register is incremented 
 				 * before a scanline is rendered
 				 */
-				hardware_registers[LY] = -1;
+				gb->hw_registers[LY] = -1;
 				
-			} else if(hardware_registers[LY] < 144) {
+			} else if(gb->hw_registers[LY] < 144) {
 			//} else if(scanline < 144) {
 				render_scanline();
 			}
             
-			++hardware_registers[LY];
+			++gb->hw_registers[LY];
 
             /* TODO this is in testing.... */
-            if(hardware_registers[LY] == hardware_registers[LYC]) {
-                hardware_registers[STAT] |= 0x02;
-                if(hardware_registers[STAT] & 0x40) {
+            if(gb->hw_registers[LY] == gb->hw_registers[LYC]) {
+                gb->hw_registers[STAT] |= 0x02;
+                if(gb->hw_registers[STAT] & 0x40) {
                     interrupt(LCD_STATUS);
                     printf("happening...\n");
                 }
             } else {
-                hardware_registers[STAT] &= ~0x02;
+                gb->hw_registers[STAT] &= ~0x02;
             }
 		}
 	}
@@ -757,7 +757,7 @@ static void update_lcd( u32 current_cycles )
 
 static void update_timer( u32 current_cycles )
 {
-    if((hardware_registers[TAC] & 0x4) == 0) {
+    if((gb->hw_registers[TAC] & 0x4) == 0) {
         /* timer is stopped */
         return;
     }
@@ -766,14 +766,14 @@ static void update_timer( u32 current_cycles )
     
     if(timer_counter <= 0) {
         /* reset the counter */
-        int index = hardware_registers[TAC] & 0x3;
+        int index = gb->hw_registers[TAC] & 0x3;
         timer_counter = timer_counter_table[index];
         
-        if(hardware_registers[TIMA] == 0xFF) {
-            hardware_registers[TIMA] = hardware_registers[TMA];
+        if(gb->hw_registers[TIMA] == 0xFF) {
+            gb->hw_registers[TIMA] = gb->hw_registers[TMA];
             interrupt( TIMER );
         } else {
-            ++hardware_registers[TIMA];
+            ++gb->hw_registers[TIMA];
         }
     }
 }
@@ -785,15 +785,15 @@ static void update_divider( u32 current_cycles )
 	if(divider_counter >= 255) {
 		/* increment divider register */
 		divider_counter = 0;
-		++hardware_registers[DIV];
+		++gb->hw_registers[DIV];
 	}
 }
 
 static void service_interrupts()
 {
-	if( IME && interrupt_enable && hardware_registers[IF] ) {
+	if( gb->ime_flag && gb->ie_register && gb->hw_registers[IF] ) {
 	
-		u8 interrupt = interrupt_enable & hardware_registers[IF];
+		u8 interrupt = gb->ie_register & gb->hw_registers[IF];
 		
 		bool serviced_interrupt = false;
 		u16 interrupt_address = 0;
@@ -803,7 +803,7 @@ static void service_interrupts()
 			/* vblank interrupt */
 			serviced_interrupt = true;
 
-			hardware_registers[IF] &= ~0x1;
+			gb->hw_registers[IF] &= ~0x1;
 			interrupt_address = 0x40;
 
 		} 
@@ -811,7 +811,7 @@ static void service_interrupts()
 			/* lcd interrupt */
 			serviced_interrupt = true;
 			
-			hardware_registers[IF] &= ~0x2;
+			gb->hw_registers[IF] &= ~0x2;
 			interrupt_address = 0x48;
 
 		} 
@@ -819,7 +819,7 @@ static void service_interrupts()
 			/* timer interrupt */
 			serviced_interrupt = true;
 			
-			hardware_registers[IF] &= ~0x4;
+			gb->hw_registers[IF] &= ~0x4;
 			interrupt_address = 0x50;
 			
 		} 
@@ -828,14 +828,14 @@ static void service_interrupts()
             /* serial interrupt */
             serviced_interrupt = true;
             
-            hardware_registers[IF] &= ~0x8;
+            gb->hw_registers[IF] &= ~0x8;
 			interrupt_address = 0x58;
         }
 		else if( interrupt & 0x10 ) {
 			/* joypad Interrupt */
 			serviced_interrupt = true;
 			
-			hardware_registers[IF] &= ~0x10;
+			gb->hw_registers[IF] &= ~0x10;
 			interrupt_address = 0x60;
 		}
 		
@@ -845,7 +845,7 @@ static void service_interrupts()
 			WRITE( --SP.W, PC.B.H );
 			WRITE( --SP.W, PC.B.L );
 			
-			IME = 0;
+			gb->ime_flag = 0;
 			PC.W = interrupt_address;
 			cycles += 16;
 		}

@@ -74,15 +74,16 @@ int cgbemu_load_cartridge(const uint8_t* buffer, int size)
 
 void cgbemu_load_bios(uint8_t* buffer, int size)
 {
-	assert(cartridge->rom != NULL);
+    assert(buffer);
 	assert(size > 0);
+	assert(gb->bios);
 	
 	if(size > GAMEBOY_BIOS_SIZE) {
 		printf("invalid bios size\n");
 		return;
 	}
 	
-	memcpy(gameboy_bios, buffer, size);
+	memcpy(gb->bios, buffer, size);
 }
 
 
