@@ -1,10 +1,7 @@
-
-#include "globals.h"
-
+#include "cartridge.h"
 #include "memory.h"
 #include <string.h>
 
-#include "cartridge.h"
 
 Cartridge* cartridge = NULL;
 
