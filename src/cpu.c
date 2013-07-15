@@ -45,8 +45,8 @@
 #define LO B.L
 
 /* memory access functions */
-#define READ(S) read_memory(S)
-#define WRITE(D, B) write_memory(D, B)
+#define READ(S) memory_read(S)
+#define WRITE(D, B) memory_write(D, B)
 
 /* behavior at the end of each instruction */
 #define CLOCK_CYCLES(x) return(x)
@@ -503,6 +503,7 @@ void change_emulator_state( EmulatorState new_state ) {
     emulator_state = new_state;
 }
 
+
 void initialize_cpu()
 {
 	assert( cpu_initialized == false );
@@ -510,8 +511,6 @@ void initialize_cpu()
     change_emulator_state( PAUSED );
 
 	PC.W = 0;
-    //PC.W = 0x100;
-    //fprintf(stderr, "skipping bios\n");
 	SP.W = 0;
 	BC.W = 0;
 	DE.W = 0;
@@ -529,6 +528,21 @@ void initialize_cpu()
 	divider_counter = 0;
 	
 	cpu_initialized = true;
+    
+
+    PC.W = 0x0100;
+    SP.W = 0xFFFE;
+    BC.W = 0x0000;
+    DE.W = 0xFF56;
+    HL.W = 0x000D;
+    AF.W = 0x1180;
+    IR.W = 0x00E0;
+
+    timer_counter = 0x400;
+    scanline_counter = 0x1A0;
+    cycles = 0x8F3F;
+    mode_cycles = 0xC17055;
+    divider_counter = 0xB1;
 	
 }
 
@@ -855,17 +869,32 @@ static void service_interrupts()
 
 void print_cpu_state()
 {
-	
-
-	fprintf(stdout, "AF=%04X\tBC=%04X\tDE=%04X\tHL=%04X\tSP=%04X\tPC=%04X\t(%s)\n",\
-	AF.W, BC.W, DE.W, HL.W, SP.W, PC.W, opcode[READ(PC.W)]);
-\
-	//TEMPORARY
-	/*
-	fprintf(opcodes_file, "AF=%04X\tBC=%04X\tDE=%04X\tHL=%04X\tSP=%04X\tPC=%04X\t\n",\
-	AF.W, BC.W, DE.W, HL.W, SP.W, PC.W);
-	*/
+    printf("timer_counter: %X\n"
+            "scanline_counter: %X\n"
+            "cycles: %X\n"
+            "mode_cycles: %X\n"
+            "divider_counter: %X\n"
+            "PC: %X\n"
+            "SP: %X\n"
+            "BC: %X\n"
+            "DE: %X\n"
+            "HL: %X\n"
+            "AF: %X\n"
+            "IF: %X\n",
+            timer_counter,
+            scanline_counter,
+            cycles,
+            mode_cycles,
+            divider_counter,
+            PC.W,
+            SP.W,
+            BC.W,
+            DE.W,
+            HL.W,
+            AF.W,
+            IR.W);
 }
+
 
 //temp
 //static bool debug_daa = false;

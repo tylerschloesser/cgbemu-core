@@ -14,6 +14,65 @@ void gameboy_toggle_speed() {
     fullspeed = !fullspeed;
 }
 
+//TeMP
+#include "hw_registers.h"
+
+
+void swap(uint8_t* a, uint8_t* b) {
+    uint8_t c = *a;
+    *a = *b;
+    *b = c;
+}
+
+void gameboy_load_bios(uint8_t* buffer, int size)
+{
+    assert(buffer);
+    assert(size > 0);
+    assert(gb);
+    assert(gb->bios);
+
+    if(size != GAMEBOY_BIOS_SIZE) {
+        printf("invalid bios size\n");
+        return;
+    }
+
+    memcpy(gb->bios, buffer, size);
+
+    if(gb->use_bios) {
+        gameboy_enable_bios();
+    }
+}
+
+
+
+void gameboy_enable_bios()
+{
+    assert(gb);
+    assert(gb->bios);
+    assert(cartridge);
+    assert(cartridge->rom);
+
+    if(gb->use_bios) {
+        int i;
+        for(i = 0; i < 0x100; ++i) {
+            swap(&cartridge->rom[i], &gb->bios[i]);
+        }
+        for(i = 0x200; i < 0x900; ++i) {
+            swap(&cartridge->rom[i], &gb->bios[i]);
+        }
+    }
+}
+
+void gameboy_disable_bios() {
+    assert(gb);
+
+    if(gb->use_bios)
+        gameboy_enable_bios();
+
+}
+
+
+
 static bool gameboy_initialized = false;
 void initialize_gameboy(void)
 {
@@ -32,7 +91,8 @@ void initialize_gameboy(void)
     gb->ob_pallete = (uint8_t*)calloc(GAMEBOY_OB_PALLETE_SIZE, 1);
 
     gb->hram = (uint8_t*)calloc(GAMEBOY_HRAM_SIZE, 1);
-    gb->hw_registers = (uint8_t*)calloc(GAMEBOY_HW_REGISTERS_SIZE, 1);
+    //gb->hw_registers = (uint8_t*)calloc(GAMEBOY_HW_REGISTERS_SIZE, 1);
+    gb->hw_registers = hw_registers;
 
     assert(gb->ram);
     assert(gb->vram);
@@ -47,21 +107,27 @@ void initialize_gameboy(void)
     
     gb->hw_registers[SVBK] = 1; /* selected ram bank */
     gb->hw_registers[VBK]  = 0; /* selected vram bank */    
-    gb->hw_registers[BLCK] = 0; /* bios */
 
-    gameboy_update_selected_ram_bank();
-    gameboy_update_selected_vram_bank();
+
+    //gb->hw_registers[BLCK] = 0x11; /* bios (initially disabled) */
+    //gb->use_bios = false;
+
+    gb->hw_registers[BLCK] = 0x00;
+    gb->use_bios = false;
+
+    gameboy_update_selected_ram();
+    gameboy_update_selected_vram();
 
     gameboy_initialized = true;
 }
 
-void gameboy_update_selected_ram_bank()
+void gameboy_update_selected_ram()
 {
     u32 ram_bank = gb->hw_registers[SVBK];
     gb->selected_ram = &gb->ram[ram_bank * 0x1000];
 }
 
-void gameboy_update_selected_vram_bank()
+void gameboy_update_selected_vram()
 {
     u32 vram_bank = gb->hw_registers[VBK];
     gb->selected_vram = &gb->vram[vram_bank * 0x2000];
@@ -249,6 +315,9 @@ void load_state(uint8_t* buffer, int size) {
  
     set_cpu_state(state);
 
-    update_all_selected_banks(); 
+    cartridge_update_selected_rom();
+    cartridge_update_selected_ram();
+    gameboy_update_selected_ram();
+    gameboy_update_selected_vram();
 }
 

@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "android_interface.h"
+#include "cgbemu.h"
 
 #include "cpu.h"
 #include "screen.h"
@@ -74,16 +74,7 @@ int cgbemu_load_cartridge(const uint8_t* buffer, int size)
 
 void cgbemu_load_bios(uint8_t* buffer, int size)
 {
-    assert(buffer);
-	assert(size > 0);
-	assert(gb->bios);
-	
-	if(size > GAMEBOY_BIOS_SIZE) {
-		printf("invalid bios size\n");
-		return;
-	}
-	
-	memcpy(gb->bios, buffer, size);
+    gameboy_load_bios(buffer, size);
 }
 
 

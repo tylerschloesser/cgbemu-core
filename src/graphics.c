@@ -270,10 +270,10 @@ int render_sprites() {
     int sprite;
     for(sprite = 0; sprite < sprite_count; ++sprite) {
     
-        s16 y_position = ((s16)read_memory(sprite_attribute_index++)) - 16;
-        s16 x_position = ((s16)read_memory(sprite_attribute_index++)) - 8;
-        u8 tile_number = read_memory(sprite_attribute_index++);
-        u8 tile_attributes = read_memory(sprite_attribute_index++);
+        s16 y_position = ((s16)memory_read(sprite_attribute_index++)) - 16;
+        s16 x_position = ((s16)memory_read(sprite_attribute_index++)) - 8;
+        u8 tile_number = memory_read(sprite_attribute_index++);
+        u8 tile_attributes = memory_read(sprite_attribute_index++);
 
         if(y_position == -16 || y_position >= 144)
             continue;

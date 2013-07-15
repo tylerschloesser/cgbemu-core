@@ -16,7 +16,8 @@ typedef enum {
     UNSUPPORTED 
 } MemoryBankController;
 
-
+void cartridge_update_selected_rom();
+void cartridge_update_selected_ram();
 
 typedef struct {
     MemoryBankController mbc;

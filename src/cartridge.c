@@ -237,8 +237,8 @@ int load_cartridge(const uint8_t* buffer, int buffer_size) {
 
     cartridge->has_battery = get_has_battery(cartridge_type);
 
-
-    update_selected_cartridge_banks();
+    cartridge_update_selected_rom();
+    cartridge_update_selected_ram();
 
     printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
             cartridge->ram_size / 1024, cartridge->rom_size / 1024);
@@ -275,6 +275,18 @@ static int get_cartridge_rom_size(int header_value) {
     return -1;
 }
 
+
+void cartridge_update_selected_rom() {
+
+    cartridge->selected_rom = 
+        &cartridge->rom[cartridge->selected_rom_bank * 0x4000]; 
+     
+}
+void cartridge_update_selected_ram() {
+
+    cartridge->selected_ram = 
+        &cartridge->ram[cartridge->selected_ram_bank * 0x2000];
+}
 
 
 

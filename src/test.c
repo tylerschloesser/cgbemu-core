@@ -6,7 +6,7 @@
 
 #include <GL/freeglut.h>
 
-#include "android_interface.h"
+#include "cgbemu.h"
 
 //temp
 #include "cpu.h"
