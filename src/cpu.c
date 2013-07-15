@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "cpu.h"
 #include "memory.h"
-#include "graphics.h"
+#include "screen.h"
 
 /* CPU Flags */
 #define ZF 0x80
@@ -54,7 +54,6 @@
 /* behavior on invalid opcode */
 #define INVALID_OPCODE(X) 					\
 	printf("Invalid opcode (%X)!\n", X); 	\
-	display_cpu_values(); 					\
 	getchar(); 								\
 	exit(1)
 

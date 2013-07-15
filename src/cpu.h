@@ -65,7 +65,6 @@ void change_emulator_state( EmulatorState new_state );
 
 
 //TEMPORARY
-extern bool output_opcodes;
 extern bool fullspeed;
 
 /* 
@@ -85,10 +84,5 @@ void emulate_cpu();
 void start_cpu();
 void stop_cpu();
 void pause_cpu();
-
-/*
-void cpu_attach_debugger( Debugger* );
-Debugger *cpu_detach_debugger( void ); 
-*/
 
 #endif /* CPU_H_INCLUDED */

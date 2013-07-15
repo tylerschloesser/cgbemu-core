@@ -12,8 +12,7 @@
 #include "cpu.h"
 #include "memory.h"
 
-#include "graphics.h"
-
+#include "screen.h"
 
 //#define TEXTURE_WIDTH 256
 #define TEXTURE_WIDTH 160
@@ -242,9 +241,6 @@ void processKeyboard(int key, bool down)
             if(!down) cpu_step = !cpu_step;
         case 'd':
             //dump_vram();
-            break;
-        case 'm':
-            print_map();
             break;
 
 		default:

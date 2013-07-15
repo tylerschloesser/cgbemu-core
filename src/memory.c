@@ -4,6 +4,8 @@
 #include "cartridge.h"
 #include "gameboy.h"
 
+#include "screen.h"
+
 
 #define INVALID_WRITE( location )															\
 			/*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/ 	\
@@ -13,8 +15,6 @@
 			/*fprintf( stderr, "attempted to read from invalid location: %04X\n", location );*/ 	\
 			return 0
             
-static bool memory_initialized = false;
-
 int get_checksum(uint8_t* buffer, int size) {
     int i;
     int sum = 0;
@@ -66,19 +66,6 @@ void hdma_transfer(void)
     }
 }
 
-void memory_initialize() 
-{
-	assert( memory_initialized == false );
-  
-	memory_initialized = true;
-}
-
-void memory_reinitialize()
-{
-	assert( memory_initialized == true );
-	memory_initialized = false;
-	initialize_memory();
-}
 
 /* TODO move this to cartridge.c */
 void update_cartridge_banking(Cartridge* cartridge) {
@@ -414,8 +401,6 @@ uint8_t mbc5_read(uint16_t location) {
 
 void memory_write(uint16_t location, uint8_t data)
 {
-	assert( memory_initialized == true );
-
     if(location < 0xE000) {
         if(location == 0x83c0) {
             //printf("wrote %X to %X\n", data, location);
@@ -447,6 +432,9 @@ void memory_write(uint16_t location, uint8_t data)
             int offset = 0xFF00;
 			
 			switch(location - offset) {
+                case LCDC:
+                    update_lcd_control_register(data);
+                    break;
                 case P1:
                 {
                     //joypad register
@@ -647,8 +635,6 @@ void memory_write(uint16_t location, uint8_t data)
 }
 
 uint8_t memory_read(uint16_t location) {
-
-	assert( memory_initialized == true );
 
     if(location < 0xE000) {
         return cartridge->read(location);

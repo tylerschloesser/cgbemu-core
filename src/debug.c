@@ -7,24 +7,6 @@
 #include <android/log.h>
 #endif
 
-
-/*
-void dprintf( const char* format, ... )
-{
-	va_list args;
-	va_start(args, format);
-	
-#ifdef __ANDROID__ 
-	__android_log_vprint(ANDROID_LOG_DEBUG, "TylerIsCool", format, args);
-#else	
-	vfprintf(stderr, format, args);
-#endif
-
-	va_end(args);
-}
-
-*/
-
 FILE *output_log = NULL;
 
 void open_log()
@@ -50,24 +32,6 @@ void write_log( const char* format, ... )
 	va_end(args);
 }
 
-void display_cpu_values() 
-{
-	/*
-	printf("PC:%04X IR:%02X AF:%04X BC:%04X DE:%04X HL:%04X SP:%04X IE:%01X  IME:%01X\n",PC.W, IR.W, AF.W, BC.W, DE.W, HL.W, SP.W, interrupt_enable, IME);
-	*/
-}
-
-void display_debug_info()
-{
-/*
-	char driver_name[256];
-	if(SDL_VideoDriverName(driver_name, 256)) {
-		dprintf("Video driver name: %s\n", driver_name);
-	} else {
-		dprintf("Unable to get video driver name");
-	}
-*/
-}
 
 char opcode[][16] = {
 "NOP",

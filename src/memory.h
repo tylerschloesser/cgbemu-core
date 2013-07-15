@@ -7,7 +7,6 @@
 //temp
 #include "cpu.h"
 
-
 uint8_t memory_read(uint16_t);
 void memory_write(uint16_t, uint8_t);
 
@@ -47,8 +46,5 @@ enum bg_map_attributes {
 	VERTICAL_FLIP = 0x40,
 	BG_TO_OAM_PRIORITY = 0x80
 };
-
-void memory_initialize();
-void memory_reinitialize();
 
 #endif // MEMORY_H_INCLUDED

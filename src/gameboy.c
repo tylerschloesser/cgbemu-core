@@ -2,7 +2,6 @@
 #include "cpu.h"
 #include "joypad.h"
 #include "memory.h"
-#include "graphics.h"
 
 #include "cartridge.h"
 
@@ -140,10 +139,8 @@ void gameboy_power_on()
     
     initialize_gameboy();
 	initialize_cpu();
-	initialize_memory();
 	initialize_joypad();
 	initialize_screen();
-	initialize_graphics();
 	
 	return;
 }

@@ -1,5 +1,5 @@
 
-SOURCES=cgbemu.c cpu.c debug.c gameboy.c graphics.c joypad.c memory.c screen.c tools.c cartridge.c test.c
+SOURCES=cgbemu.c cpu.c debug.c gameboy.c joypad.c memory.c screen.c cartridge.c test.c
 OBJECTS=$(SOURCES:.c=.o)
 CC=gcc
 CFLAGS= -c -O2 -pg -g -Wall
