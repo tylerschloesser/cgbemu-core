@@ -138,65 +138,65 @@ void gameboy_power_on()
 
     
     initialize_gameboy();
-	initialize_cpu();
-	initialize_joypad();
-	initialize_screen();
-	
-	return;
+    initialize_cpu();
+    initialize_joypad();
+    initialize_screen();
+    
+    return;
 }
 
 void gameboy_power_off()
 {
     printf("gameboy_power_off()\n");
-	stop_cpu();
+    stop_cpu();
 }
 
 
 void gameboy_toggle_button( Button button, bool pressed )
 {
 
-	assert( button != INVALID );
+    assert( button != INVALID );
 
-	// temporary to allow for the new interface
-	int gb_key = -1;
-	switch( button )
-	{
-		case UP:
-			gb_key = JOYPAD_UP;
-			break;
-		case DOWN:
-			gb_key = JOYPAD_DOWN;
-			break;
-		case LEFT:
-			gb_key = JOYPAD_LEFT;
-			break;
-		case RIGHT:
-			gb_key = JOYPAD_RIGHT;
-			break;
-		case START:
-			gb_key = JOYPAD_START;
-			break;
-		case SELECT:
-			gb_key = JOYPAD_SELECT;
-			break;
-		case A:
-			gb_key = JOYPAD_A;
-			break;
-		case B:
-			gb_key = JOYPAD_B;
-			break;
+    // temporary to allow for the new interface
+    int gb_key = -1;
+    switch( button )
+    {
+        case UP:
+            gb_key = JOYPAD_UP;
+            break;
+        case DOWN:
+            gb_key = JOYPAD_DOWN;
+            break;
+        case LEFT:
+            gb_key = JOYPAD_LEFT;
+            break;
+        case RIGHT:
+            gb_key = JOYPAD_RIGHT;
+            break;
+        case START:
+            gb_key = JOYPAD_START;
+            break;
+        case SELECT:
+            gb_key = JOYPAD_SELECT;
+            break;
+        case A:
+            gb_key = JOYPAD_A;
+            break;
+        case B:
+            gb_key = JOYPAD_B;
+            break;
         case INVALID:
             return;
-	}
-	
-	if( gb_key != -1 )
-	{
-		if( pressed == true ) {
-			joypad_down( gb_key );
-		} else {
-			joypad_up( gb_key );
-		}
-	}
+    }
+    
+    if( gb_key != -1 )
+    {
+        if( pressed == true ) {
+            joypad_down( gb_key );
+        } else {
+            joypad_up( gb_key );
+        }
+    }
 }
 
 int get_save_state_size() {
@@ -246,8 +246,8 @@ void save_state(uint8_t** buffer) {
     (*buffer) = (uint8_t*)malloc(save_state_size);
     uint8_t* buffer_original = (*buffer);    
 
-	CpuState state = get_cpu_state();
-	u8* state_raw = (u8*)&state;
+    CpuState state = get_cpu_state();
+    u8* state_raw = (u8*)&state;
 
     memcpy_id(buffer, state_raw, sizeof(CpuState));
     /*
@@ -286,7 +286,7 @@ void load_state(uint8_t* buffer, int size) {
 
     CpuState state;
     uint8_t* state_raw = (uint8_t*)&state;
-   	
+    
     memcpy_is(state_raw, &buffer, sizeof(CpuState));
     /*
     memcpy_is(cartridge_ram, &buffer, cartridge_ram_size);

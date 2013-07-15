@@ -16,26 +16,26 @@ static bool initialized = false;
 
 void initialize_joypad() 
 {
-	
-	assert( initialized == false );
-	
+    
+    assert( initialized == false );
+    
     joypad_state = 0xFF;
     gb->hw_registers[P1] |= 0xF;
-	
-	initialized = true;
+    
+    initialized = true;
 }
 
 void reinitialize_joypad()
 {
-	assert( initialized == true );
-	initialized = false;
-	initialize_joypad();
+    assert( initialized == true );
+    initialized = false;
+    initialize_joypad();
 }
 
 
 u8 get_joypad_state() {
 
-	assert( initialized == true );
+    assert( initialized == true );
 
     u8 joypad_select = gb->hw_registers[P1] & 0x30;
     
@@ -55,17 +55,17 @@ u8 get_joypad_state() {
 
 void joypad_down(int gb_key) {
   
-	assert( initialized );
-	assert( gb_key < 8 );
-	
-	/*
-	u8 bit = 1 << gb_key;
-	if( joypad_state ^ bit == 0 ) {
-		fprintf(stderr,"alreadypressed\n");
-		return;
-	}
-	*/
-	
+    assert( initialized );
+    assert( gb_key < 8 );
+    
+    /*
+    u8 bit = 1 << gb_key;
+    if( joypad_state ^ bit == 0 ) {
+        fprintf(stderr,"alreadypressed\n");
+        return;
+    }
+    */
+    
     joypad_state &= ~(1 << gb_key);
     
     gb->hw_registers[P1] |= (get_joypad_state() & 0x0F);
@@ -75,7 +75,7 @@ void joypad_down(int gb_key) {
 
 void joypad_up(int gb_key) {
 
-	assert( initialized == true );
+    assert( initialized == true );
     assert(gb_key < 8); 
 
     joypad_state |= (1 << gb_key);
@@ -88,8 +88,8 @@ void joypad_up(int gb_key) {
  */
 void joypad_select_button_keys() {
 
-	assert( initialized == true );
-	
+    assert( initialized == true );
+    
     // clear last 4 bits
     //gb->hw_registers[P1] &= 0xF0;
     gb->hw_registers[P1] = ~0x20;
@@ -103,8 +103,8 @@ void joypad_select_button_keys() {
  */
 void joypad_select_direction_keys() {
 
-	assert( initialized == true );
-	
+    assert( initialized == true );
+    
     // clear the last 4 bits
     //gb->hw_registers[P1] &= 0xF0;
     gb->hw_registers[P1] = ~0x10;

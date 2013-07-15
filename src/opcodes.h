@@ -1,158 +1,158 @@
 case 0x00: //NOP
-	CLOCK_CYCLES(4);
+    CLOCK_CYCLES(4);
 case 0x01: //LD BC, d16
-	REG_C = READ(PC.W++);
-	REG_B = READ(PC.W++);
-	CLOCK_CYCLES(12);
+    REG_C = READ(PC.W++);
+    REG_B = READ(PC.W++);
+    CLOCK_CYCLES(12);
 case 0x02: //LD (BC), A
-	WRITE(BC.W, REG_A);
-	CLOCK_CYCLES(8);
+    WRITE(BC.W, REG_A);
+    CLOCK_CYCLES(8);
 case 0x03: //INC BC
-	BC.W++;
-	CLOCK_CYCLES(8); 
+    BC.W++;
+    CLOCK_CYCLES(8); 
 case 0x04: //INC B
-	REG_B++;
-	//REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF); 5/15/2012
-	REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_B++;
+    //REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF); 5/15/2012
+    REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x05: //DEC B
-	REG_B--;
-	//REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0); 5/15/2012
-	REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_B--;
+    //REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0); 5/15/2012
+    REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x06: //LD B, d8
-	REG_B = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_B = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x07: //RLCA
-	REG_F = (REG_A & 0x80) ? CF : 0;
-	REG_A = (REG_F & CF) ? ((REG_A << 1) | 1) : (REG_A << 1);
-	CLOCK_CYCLES(4);
+    REG_F = (REG_A & 0x80) ? CF : 0;
+    REG_A = (REG_F & CF) ? ((REG_A << 1) | 1) : (REG_A << 1);
+    CLOCK_CYCLES(4);
 case 0x08: //LD (a16), SP
-	// TR.W = READ(PC.W++);
-	// TR.W |= (READ(PC.W++) << 8);
+    // TR.W = READ(PC.W++);
+    // TR.W |= (READ(PC.W++) << 8);
     TR.LO = READ(PC.W++);
     TR.HI = READ(PC.W++);
-	WRITE(TR.W++, SP.LO);
-	WRITE(TR.W, SP.HI);
-	CLOCK_CYCLES(20);
+    WRITE(TR.W++, SP.LO);
+    WRITE(TR.W, SP.HI);
+    CLOCK_CYCLES(20);
 case 0x09: //ADD HL, BC
-	TR.W = HL.W + BC.W;
-	REG_F = (REG_F & ZF) | (((HL.W ^ BC.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < BC.W ? CF : 0);
-	HL.W = TR.W;
-	CLOCK_CYCLES(8);
+    TR.W = HL.W + BC.W;
+    REG_F = (REG_F & ZF) | (((HL.W ^ BC.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < BC.W ? CF : 0);
+    HL.W = TR.W;
+    CLOCK_CYCLES(8);
 case 0x0A: //LD A, (BC)
-	REG_A = READ(BC.W);
-	CLOCK_CYCLES(8);
+    REG_A = READ(BC.W);
+    CLOCK_CYCLES(8);
 case 0x0B: //DEC BC
-	BC.W--;
-	CLOCK_CYCLES(8);
+    BC.W--;
+    CLOCK_CYCLES(8);
 case 0x0C: //INC C
-	REG_C++;
-	//REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF); 5/15/2012
-	REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_C++;
+    //REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF); 5/15/2012
+    REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x0D: //DEC C
-	REG_C--;
-	//REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0); 5/15/2012
-	REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_C--;
+    //REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0); 5/15/2012
+    REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x0E: //LD C, d8
-	REG_C = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_C = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x0F: //RRCA
-	REG_F = (REG_A & 1) ? CF : 0;
-	REG_A = (REG_F & CF) ? ((REG_A >> 1) | 0x80) : (REG_A >> 1);
-	CLOCK_CYCLES(4);
+    REG_F = (REG_A & 1) ? CF : 0;
+    REG_A = (REG_F & CF) ? ((REG_A >> 1) | 0x80) : (REG_A >> 1);
+    CLOCK_CYCLES(4);
 case 0x10: //STOP 0
-	//printf("STOP 0\n");
+    //printf("STOP 0\n");
     //TODO I'm not exactly sure what should happen on stop, so let's just print this message and 
     //deal with it later...
     CLOCK_CYCLES(4);
 case 0x11: //LD DE, d16
-	REG_E = READ(PC.W++);
-	REG_D = READ(PC.W++);
-	CLOCK_CYCLES(12);
+    REG_E = READ(PC.W++);
+    REG_D = READ(PC.W++);
+    CLOCK_CYCLES(12);
 case 0x12: //LD (DE), A
-	WRITE(DE.W, REG_A);
-	CLOCK_CYCLES(8);
+    WRITE(DE.W, REG_A);
+    CLOCK_CYCLES(8);
 case 0x13: //INC DE
-	DE.W++;
-	CLOCK_CYCLES(8);
+    DE.W++;
+    CLOCK_CYCLES(8);
 case 0x14: //INC D
-	REG_D++;
-	REG_F = (REG_D ? 0 : ZF) | ((REG_D & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_D++;
+    REG_F = (REG_D ? 0 : ZF) | ((REG_D & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x15: //DEC D
-	REG_D--;
-	REG_F = (REG_D ? 0 : ZF) | NF | ((REG_D & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_D--;
+    REG_F = (REG_D ? 0 : ZF) | NF | ((REG_D & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x16: //LD D, d8
-	REG_D = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_D = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x17: //RLA
-	TR.LO = (REG_F & CF);
-	REG_F = (REG_A & 0x80) ? CF : 0;
-	REG_A = (REG_A << 1) | (TR.LO ? 1 : 0);
-	CLOCK_CYCLES(4);
+    TR.LO = (REG_F & CF);
+    REG_F = (REG_A & 0x80) ? CF : 0;
+    REG_A = (REG_A << 1) | (TR.LO ? 1 : 0);
+    CLOCK_CYCLES(4);
 case 0x18: //JR r8
-	PC.W += (signed char)READ(PC.W) + 1;
-	CLOCK_CYCLES(12);
+    PC.W += (signed char)READ(PC.W) + 1;
+    CLOCK_CYCLES(12);
 case 0x19: //ADD HL, DE
-	TR.W = HL.W + DE.W;
-	REG_F = (REG_F & ZF) | (((HL.W ^ DE.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < DE.W ? CF : 0);
-	HL.W = TR.W;
-	CLOCK_CYCLES(8);
+    TR.W = HL.W + DE.W;
+    REG_F = (REG_F & ZF) | (((HL.W ^ DE.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < DE.W ? CF : 0);
+    HL.W = TR.W;
+    CLOCK_CYCLES(8);
 case 0x1A: //LD A, (DE)
-	REG_A = READ(DE.W);
-	CLOCK_CYCLES(8);
+    REG_A = READ(DE.W);
+    CLOCK_CYCLES(8);
 case 0x1B: //DEC DE
-	DE.W--;
-	CLOCK_CYCLES(8);
+    DE.W--;
+    CLOCK_CYCLES(8);
 case 0x1C: //INC E
-	REG_E++;
-	REG_F = (REG_E ? 0 : ZF) | ((REG_E & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_E++;
+    REG_F = (REG_E ? 0 : ZF) | ((REG_E & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x1D: //DEC E
-	REG_E--;
-	REG_F = (REG_E ? 0 : ZF) | NF | ((REG_E & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_E--;
+    REG_F = (REG_E ? 0 : ZF) | NF | ((REG_E & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x1E: //LD E, d8
-	REG_E = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_E = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x1F: //RRA
-	TR.LO = (REG_F & CF);
-	REG_F = (REG_A & 1) ? CF : 0;
-	REG_A = (REG_A >> 1) | (TR.LO ? 0x80 : 0);
-	CLOCK_CYCLES(4);
+    TR.LO = (REG_F & CF);
+    REG_F = (REG_A & 1) ? CF : 0;
+    REG_A = (REG_A >> 1) | (TR.LO ? 0x80 : 0);
+    CLOCK_CYCLES(4);
 case 0x20: //JR NZ, r8
-	if(REG_F & ZF) {
-		PC.W++;
-		CLOCK_CYCLES(8);
-	} else {
-		PC.W += (signed char)READ(PC.W) + 1;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & ZF) {
+        PC.W++;
+        CLOCK_CYCLES(8);
+    } else {
+        PC.W += (signed char)READ(PC.W) + 1;
+        CLOCK_CYCLES(12);
+    }
 case 0x21: //LD HL, d16
-	REG_L = READ(PC.W++);
-	REG_H = READ(PC.W++);
-	CLOCK_CYCLES(12);
+    REG_L = READ(PC.W++);
+    REG_H = READ(PC.W++);
+    CLOCK_CYCLES(12);
 case 0x22: //LD(HL+), A
-	WRITE(HL.W++, REG_A);
-	CLOCK_CYCLES(8);
+    WRITE(HL.W++, REG_A);
+    CLOCK_CYCLES(8);
 case 0x23: //INC HL
-	HL.W++;
-	CLOCK_CYCLES(8);
+    HL.W++;
+    CLOCK_CYCLES(8);
 case 0x24: //INC H
-	REG_H++;
-	REG_F = (REG_H ? 0 : ZF) | ((REG_H & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_H++;
+    REG_F = (REG_H ? 0 : ZF) | ((REG_H & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x25: //DEC H
-	REG_H--;
-	REG_F = (REG_H ? 0 : ZF) | NF | ((REG_H & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_H--;
+    REG_F = (REG_H ? 0 : ZF) | NF | ((REG_H & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x26: //LD H, d8
-	REG_H = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_H = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x27: //DAA
 
     TR.W = REG_A;
@@ -161,107 +161,107 @@ case 0x27: //DAA
     CLOCK_CYCLES(4);
 
 case 0x28: //JR Z, r8
-	if(REG_F & ZF) {
-		PC.W += (signed char)READ(PC.W) + 1;
-		CLOCK_CYCLES(12);
-	} else {
-		PC.W++;
-		CLOCK_CYCLES(8);
-	}
+    if(REG_F & ZF) {
+        PC.W += (signed char)READ(PC.W) + 1;
+        CLOCK_CYCLES(12);
+    } else {
+        PC.W++;
+        CLOCK_CYCLES(8);
+    }
 case 0x29: //ADD HL, HL
-	TR.W = HL.W + HL.W;
-	REG_F = (REG_F & ZF) | (((HL.W ^ HL.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < HL.W ? CF : 0);
-	HL.W = TR.W;
-	CLOCK_CYCLES(8);
+    TR.W = HL.W + HL.W;
+    REG_F = (REG_F & ZF) | (((HL.W ^ HL.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < HL.W ? CF : 0);
+    HL.W = TR.W;
+    CLOCK_CYCLES(8);
 case 0x2A: //LD A, (HL+)
-	REG_A = READ(HL.W++);
-	CLOCK_CYCLES(8);
+    REG_A = READ(HL.W++);
+    CLOCK_CYCLES(8);
 case 0x2B: //DEC HL
-	HL.W--;
-	CLOCK_CYCLES(8);
+    HL.W--;
+    CLOCK_CYCLES(8);
 case 0x2C: //INC L
-	REG_L++;
-	REG_F = (REG_L ? 0 : ZF) | ((REG_L & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_L++;
+    REG_F = (REG_L ? 0 : ZF) | ((REG_L & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x2D: //DEC L
-	REG_L--;
-	REG_F = (REG_L ? 0 : ZF) | NF | ((REG_L & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_L--;
+    REG_F = (REG_L ? 0 : ZF) | NF | ((REG_L & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x2E: //LD L, d8
-	REG_L = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_L = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x2F: /* CPL */
-	REG_A ^= 0xFF;
-	REG_F = (REG_F & ZF) | NF | HF | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_A ^= 0xFF;
+    REG_F = (REG_F & ZF) | NF | HF | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x30: /* JR NC, r8 */
-	if(REG_F & CF) {
-		PC.W++;
-		CLOCK_CYCLES(8);
-	} else {
-		PC.W += (s8)READ(PC.W) + 1;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & CF) {
+        PC.W++;
+        CLOCK_CYCLES(8);
+    } else {
+        PC.W += (s8)READ(PC.W) + 1;
+        CLOCK_CYCLES(12);
+    }
 case 0x31: /* LD SP, d16 */
-	SP.LO = READ(PC.W++);
-	SP.HI = READ(PC.W++);
-	CLOCK_CYCLES(12);
+    SP.LO = READ(PC.W++);
+    SP.HI = READ(PC.W++);
+    CLOCK_CYCLES(12);
 case 0x32: /* LD (HL-), A */
-	WRITE(HL.W--, REG_A);
-	CLOCK_CYCLES(8);
+    WRITE(HL.W--, REG_A);
+    CLOCK_CYCLES(8);
 case 0x33: /* INC SP */
-	SP.W++;
-	CLOCK_CYCLES(8);
+    SP.W++;
+    CLOCK_CYCLES(8);
 case 0x34: /* INC (HL) */
-	TR.LO = READ(HL.W) + 1;
-	WRITE(HL.W, TR.LO);
-	REG_F = (TR.LO ? 0 : ZF) | ((TR.LO & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(12);
+    TR.LO = READ(HL.W) + 1;
+    WRITE(HL.W, TR.LO);
+    REG_F = (TR.LO ? 0 : ZF) | ((TR.LO & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(12);
 case 0x35: /* DEC (HL) */
-	TR.LO = READ(HL.W) - 1;
-	WRITE(HL.W, TR.LO);
-	REG_F = (TR.LO ? 0 : ZF) | NF | ((TR.LO & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(12);
+    TR.LO = READ(HL.W) - 1;
+    WRITE(HL.W, TR.LO);
+    REG_F = (TR.LO ? 0 : ZF) | NF | ((TR.LO & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(12);
 case 0x36: /* LD (HL), d8 */
-	WRITE(HL.W, READ(PC.W++));
-	CLOCK_CYCLES(12);
+    WRITE(HL.W, READ(PC.W++));
+    CLOCK_CYCLES(12);
 case 0x37: /* SCF */
-	REG_F = (REG_F & ZF) | CF;
-	CLOCK_CYCLES(4);
+    REG_F = (REG_F & ZF) | CF;
+    CLOCK_CYCLES(4);
 case 0x38: /* JR C, r8 */
-	if(REG_F & CF) {
-		PC.W += (s8)READ(PC.W) + 1;
-		CLOCK_CYCLES(12);
-	} else {
-		PC.W++;
-		CLOCK_CYCLES(8);
-	}
+    if(REG_F & CF) {
+        PC.W += (s8)READ(PC.W) + 1;
+        CLOCK_CYCLES(12);
+    } else {
+        PC.W++;
+        CLOCK_CYCLES(8);
+    }
 case 0x39: /* ADD HL, SP */
-	TR.W = HL.W + SP.W;
-	REG_F = (REG_F & ZF) | (((HL.W ^ SP.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < SP.W ? CF : 0);
-	HL.W = TR.W;
-	CLOCK_CYCLES(8);
+    TR.W = HL.W + SP.W;
+    REG_F = (REG_F & ZF) | (((HL.W ^ SP.W ^ TR.W) & 0x1000) ? HF : 0) | (TR.W < SP.W ? CF : 0);
+    HL.W = TR.W;
+    CLOCK_CYCLES(8);
 case 0x3A: /* LD A, (HL-) */
-	REG_A = READ(HL.W--);	
-	CLOCK_CYCLES(8);
+    REG_A = READ(HL.W--);   
+    CLOCK_CYCLES(8);
 case 0x3B: /* DEC SP */
-	SP.W--;
-	CLOCK_CYCLES(8);
+    SP.W--;
+    CLOCK_CYCLES(8);
 case 0x3C: /* INC A */
-	REG_A++;
-	REG_F = (REG_A ? 0 : ZF) | ((REG_A & 0xF) ? 0 : HF) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_A++;
+    REG_F = (REG_A ? 0 : ZF) | ((REG_A & 0xF) ? 0 : HF) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x3D: /* DEC A */
-	REG_A--;
-	REG_F = (REG_A ? 0 : ZF) | NF | ((REG_A & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
-	CLOCK_CYCLES(4);
+    REG_A--;
+    REG_F = (REG_A ? 0 : ZF) | NF | ((REG_A & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
+    CLOCK_CYCLES(4);
 case 0x3E: /* LD A, d8 */
-	REG_A = READ(PC.W++);
-	CLOCK_CYCLES(8);
+    REG_A = READ(PC.W++);
+    CLOCK_CYCLES(8);
 case 0x3F: /* CCF */
-	REG_F = (REG_F & ZF) | (~(REG_F & CF) & CF);
-	CLOCK_CYCLES(4);
-	
+    REG_F = (REG_F & ZF) | (~(REG_F & CF) & CF);
+    CLOCK_CYCLES(4);
+    
 case 0x40: REG_B = REG_B; CLOCK_CYCLES(4);
 case 0x41: REG_B = REG_C; CLOCK_CYCLES(4);
 case 0x42: REG_B = REG_D; CLOCK_CYCLES(4);
@@ -325,8 +325,8 @@ case 0x75: WRITE(HL.W, REG_L); CLOCK_CYCLES(8);
 
 case 0x76: //HALT
     waiting_for_interrupt = true;
-	CLOCK_CYCLES(4);
-	
+    CLOCK_CYCLES(4);
+    
 case 0x77: WRITE(HL.W, REG_A); CLOCK_CYCLES(8);
 
 case 0x78: REG_A = REG_B; CLOCK_CYCLES(4);
@@ -346,7 +346,7 @@ case 0x84: ADD_BYTES(REG_A, REG_H); CLOCK_CYCLES(4);
 case 0x85: ADD_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
 case 0x86: temp = READ(HL.W); ADD_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0x87: ADD_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
-	
+    
 case 0x88: ADC_BYTES(REG_A, REG_B); CLOCK_CYCLES(4);
 case 0x89: ADC_BYTES(REG_A, REG_C); CLOCK_CYCLES(4);
 case 0x8A: ADC_BYTES(REG_A, REG_D); CLOCK_CYCLES(4);
@@ -356,7 +356,7 @@ case 0x8D: ADC_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
 //case 0x8E: TR.HI = READ(HL.W); ADC_BYTES(REG_A, TR.HI); CLOCK_CYCLES(8);
 case 0x8E: temp = READ(HL.W); ADC_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0x8F: ADC_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
-	
+    
 case 0x90: SUB_BYTES(REG_A, REG_B); CLOCK_CYCLES(4);
 case 0x91: SUB_BYTES(REG_A, REG_C); CLOCK_CYCLES(4);
 case 0x92: SUB_BYTES(REG_A, REG_D); CLOCK_CYCLES(4);
@@ -375,7 +375,7 @@ case 0x9C: SBC_BYTES(REG_A, REG_H); CLOCK_CYCLES(4);
 case 0x9D: SBC_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
 case 0x9E: temp = READ(HL.W); SBC_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0x9F: SBC_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
-	
+    
 case 0xA0: AND_BYTE(REG_B); CLOCK_CYCLES(4);
 case 0xA1: AND_BYTE(REG_C); CLOCK_CYCLES(4);
 case 0xA2: AND_BYTE(REG_D); CLOCK_CYCLES(4);
@@ -402,7 +402,7 @@ case 0xB4: OR_BYTE(REG_H); CLOCK_CYCLES(4);
 case 0xB5: OR_BYTE(REG_L); CLOCK_CYCLES(4);
 case 0xB6: TR.HI = READ(HL.W); OR_BYTE(TR.HI); CLOCK_CYCLES(8);
 case 0xB7: OR_BYTE(REG_A); CLOCK_CYCLES(4);
-	
+    
 case 0xB8: CP_BYTES(REG_A, REG_B); CLOCK_CYCLES(4);
 case 0xB9: CP_BYTES(REG_A, REG_C); CLOCK_CYCLES(4);
 case 0xBA: CP_BYTES(REG_A, REG_D); CLOCK_CYCLES(4);
@@ -413,88 +413,88 @@ case 0xBD: CP_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
 //case 0xBE: TR.HI = READ(HL.W); CP_BYTES(REG_A, TR.HI); CLOCK_CYCLES(8);
 case 0xBE: temp = READ(HL.W); CP_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0xBF: CP_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
-	
+    
 case 0xC0: //RET NZ
-	if(REG_F & ZF) {
-		CLOCK_CYCLES(8);
-	} else {
-		PC.LO = READ(SP.W++);
-		PC.HI = READ(SP.W++);
-		CLOCK_CYCLES(20);
-	}
+    if(REG_F & ZF) {
+        CLOCK_CYCLES(8);
+    } else {
+        PC.LO = READ(SP.W++);
+        PC.HI = READ(SP.W++);
+        CLOCK_CYCLES(20);
+    }
 case 0xC1: //POP BC
-	REG_C = READ(SP.W++);
-	REG_B = READ(SP.W++);
-	CLOCK_CYCLES(12);
+    REG_C = READ(SP.W++);
+    REG_B = READ(SP.W++);
+    CLOCK_CYCLES(12);
 case 0xC2: //JP NZ, a16
-	if(REG_F & ZF) {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	} else {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W);
-		PC.W = TR.W;
-		CLOCK_CYCLES(16);
-	}
+    if(REG_F & ZF) {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    } else {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W);
+        PC.W = TR.W;
+        CLOCK_CYCLES(16);
+    }
 case 0xC3: //JP a16
-	TR.LO = READ(PC.W++);
-	TR.HI = READ(PC.W);
-	PC.W = TR.W;
-	CLOCK_CYCLES(16);
+    TR.LO = READ(PC.W++);
+    TR.HI = READ(PC.W);
+    PC.W = TR.W;
+    CLOCK_CYCLES(16);
 case 0xC4: //CALL NZ, a16
-	if(REG_F & ZF) {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	} else {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W++);
-		WRITE(--SP.W, PC.HI);
-		WRITE(--SP.W, PC.LO);
-		PC.W = TR.W;
-		CLOCK_CYCLES(24);
-	}
+    if(REG_F & ZF) {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    } else {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W++);
+        WRITE(--SP.W, PC.HI);
+        WRITE(--SP.W, PC.LO);
+        PC.W = TR.W;
+        CLOCK_CYCLES(24);
+    }
 case 0xC5: //PUSH BC
-	WRITE(--SP.W, REG_B);
-	WRITE(--SP.W, REG_C);
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, REG_B);
+    WRITE(--SP.W, REG_C);
+    CLOCK_CYCLES(16);
 case 0xC6: //ADD A, d8
-	TR.HI = READ(PC.W++);
-	TR.LO = REG_A + TR.HI;
-	REG_F = (TR.LO ? 0 : ZF) | (((REG_A ^ TR.HI ^ TR.LO) & 0x10) ? HF : 0) | (TR.LO < TR.HI ? CF : 0);
-	REG_A = TR.LO;
-	CLOCK_CYCLES(8);
+    TR.HI = READ(PC.W++);
+    TR.LO = REG_A + TR.HI;
+    REG_F = (TR.LO ? 0 : ZF) | (((REG_A ^ TR.HI ^ TR.LO) & 0x10) ? HF : 0) | (TR.LO < TR.HI ? CF : 0);
+    REG_A = TR.LO;
+    CLOCK_CYCLES(8);
 case 0xC7: //RST 00H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0;
+    CLOCK_CYCLES(16);
 case 0xC8: //RET Z
-	if(REG_F & ZF) {
-		PC.LO = READ(SP.W++);
-		PC.HI = READ(SP.W++);
-		CLOCK_CYCLES(20);
-	} else {
-		CLOCK_CYCLES(8);
-	}
+    if(REG_F & ZF) {
+        PC.LO = READ(SP.W++);
+        PC.HI = READ(SP.W++);
+        CLOCK_CYCLES(20);
+    } else {
+        CLOCK_CYCLES(8);
+    }
 case 0xC9: //RET
-	PC.LO = READ(SP.W++);
-	PC.HI = READ(SP.W++);
-	CLOCK_CYCLES(16);
+    PC.LO = READ(SP.W++);
+    PC.HI = READ(SP.W++);
+    CLOCK_CYCLES(16);
 case 0xCA: //JP Z, a16
-	if(REG_F & ZF) {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W);
-		PC.W = TR.W;
-		CLOCK_CYCLES(16);
-	} else {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & ZF) {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W);
+        PC.W = TR.W;
+        CLOCK_CYCLES(16);
+    } else {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    }
 case 0xCB: //PREFIX CB
 {
-	IR.W = READ(PC.W++);
-	switch(IR.W) {
+    IR.W = READ(PC.W++);
+    switch(IR.W) {
 case 0x00: RLC(REG_B); CLOCK_CYCLES(8);
 case 0x01: RLC(REG_C); CLOCK_CYCLES(8);
 case 0x02: RLC(REG_D); CLOCK_CYCLES(8);
@@ -542,9 +542,9 @@ case 0x27: SLA(REG_A); CLOCK_CYCLES(8);
 
 case 0x28: SRA(REG_B); CLOCK_CYCLES(8);
 case 0x29: SRA(REG_C); CLOCK_CYCLES(8);
-case 0x2A: SRA(REG_D); CLOCK_CYCLES(8);	
-case 0x2B: SRA(REG_E); CLOCK_CYCLES(8);	
-case 0x2C: SRA(REG_H); CLOCK_CYCLES(8);	
+case 0x2A: SRA(REG_D); CLOCK_CYCLES(8); 
+case 0x2B: SRA(REG_E); CLOCK_CYCLES(8); 
+case 0x2C: SRA(REG_H); CLOCK_CYCLES(8); 
 case 0x2D: SRA(REG_L); CLOCK_CYCLES(8);
 case 0x2E: TR.HI = READ(HL.W); SRA(TR.HI); WRITE(HL.W, TR.HI); CLOCK_CYCLES(16);
 case 0x2F: SRA(REG_A); CLOCK_CYCLES(8);
@@ -566,7 +566,7 @@ case 0x3C: SRL(REG_H); CLOCK_CYCLES(8);
 case 0x3D: SRL(REG_L); CLOCK_CYCLES(8);
 case 0x3E: TR.HI = READ(HL.W); SRL(TR.HI); WRITE(HL.W, TR.HI); CLOCK_CYCLES(16);
 case 0x3F: SRL(REG_A); CLOCK_CYCLES(8);
-	
+    
 case 0x40: BIT(0, REG_B); CLOCK_CYCLES(8);
 case 0x41: BIT(0, REG_C); CLOCK_CYCLES(8);
 case 0x42: BIT(0, REG_D); CLOCK_CYCLES(8);
@@ -638,7 +638,7 @@ case 0x7C: BIT(7, REG_H); CLOCK_CYCLES(8);
 case 0x7D: BIT(7, REG_L); CLOCK_CYCLES(8);
 case 0x7E: TR.HI = READ(HL.W); BIT(7, TR.HI); CLOCK_CYCLES(16);
 case 0x7F: BIT(7, REG_A); CLOCK_CYCLES(8);
-	
+    
 case 0x80: RES(0, REG_B); CLOCK_CYCLES(8);
 case 0x81: RES(0, REG_C); CLOCK_CYCLES(8);
 case 0x82: RES(0, REG_D); CLOCK_CYCLES(8);
@@ -710,7 +710,7 @@ case 0xBC: RES(7, REG_H); CLOCK_CYCLES(8);
 case 0xBD: RES(7, REG_L); CLOCK_CYCLES(8);
 case 0xBE: TR.HI = READ(HL.W); RES(7, TR.HI); WRITE(HL.W, TR.HI); CLOCK_CYCLES(16);
 case 0xBF: RES(7, REG_A); CLOCK_CYCLES(8);
-	
+    
 case 0xC0: SET(0, REG_B); CLOCK_CYCLES(8);
 case 0xC1: SET(0, REG_C); CLOCK_CYCLES(8);
 case 0xC2: SET(0, REG_D); CLOCK_CYCLES(8);
@@ -782,42 +782,42 @@ case 0xFC: SET(7, REG_H); CLOCK_CYCLES(8);
 case 0xFD: SET(7, REG_L); CLOCK_CYCLES(8);
 case 0xFE: TR.HI = READ(HL.W); SET(7, TR.HI); WRITE(HL.W, TR.HI); CLOCK_CYCLES(16);
 case 0xFF: SET(7, REG_A); CLOCK_CYCLES(8);
-	} //switch
+    } //switch
 }
 case 0xCC: //CALL Z, a16
-	if(REG_F & ZF) {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W++);
-		WRITE(--SP.W, PC.HI);
-		WRITE(--SP.W, PC.LO);
-		PC.W = TR.W;
-		CLOCK_CYCLES(24);
-	} else {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & ZF) {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W++);
+        WRITE(--SP.W, PC.HI);
+        WRITE(--SP.W, PC.LO);
+        PC.W = TR.W;
+        CLOCK_CYCLES(24);
+    } else {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    }
 case 0xCD: //CALL a16v
 {
-	TR.LO = READ(PC.W++);
-	TR.HI = READ(PC.W++);
-		
-	/*
-	//TEMPTEMPTEMP
-	if(TR.W == 0x0211) { //wait for vblank 
-		printf("Wait for VBLANK called.\n");
-		//DISPLAY_OPCODES = true;
-		//getchar();
-	}
-	*/
-	
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.W = TR.W;
-	CLOCK_CYCLES(24);
+    TR.LO = READ(PC.W++);
+    TR.HI = READ(PC.W++);
+        
+    /*
+    //TEMPTEMPTEMP
+    if(TR.W == 0x0211) { //wait for vblank 
+        printf("Wait for VBLANK called.\n");
+        //DISPLAY_OPCODES = true;
+        //getchar();
+    }
+    */
+    
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.W = TR.W;
+    CLOCK_CYCLES(24);
 }
 case 0xCE: //ADC A, d8
 {
-	//TR.HI = READ(PC.W++) + ((REG_F & CF) >> 4);
+    //TR.HI = READ(PC.W++) + ((REG_F & CF) >> 4);
     u8 R1 = REG_A;
     u8 R2 = READ(PC.W++);
     
@@ -832,106 +832,106 @@ case 0xCE: //ADC A, d8
 
     /* 
     TR.HI = READ(PC.W++) + ((REG_F & CF) ? 1 : 0);
-	TR.LO = REG_A + TR.HI;
-	REG_F = (TR.LO ? 0 : ZF) | (((REG_A ^ TR.HI ^ TR.LO) & 0x10) ? HF : 0) | (TR.LO < TR.HI ? CF : 0);
-	REG_A = TR.LO;
-	CLOCK_CYCLES(8);
+    TR.LO = REG_A + TR.HI;
+    REG_F = (TR.LO ? 0 : ZF) | (((REG_A ^ TR.HI ^ TR.LO) & 0x10) ? HF : 0) | (TR.LO < TR.HI ? CF : 0);
+    REG_A = TR.LO;
+    CLOCK_CYCLES(8);
     */
 }
 case 0xCF: //RST 08H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x8;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x8;
+    CLOCK_CYCLES(16);
 case 0xD0: //RET NC
-	if(REG_F & CF) {
-		CLOCK_CYCLES(8);
-	} else {
-		PC.LO = READ(SP.W++);
-		PC.HI = READ(SP.W++);
-		CLOCK_CYCLES(20);
-	}
+    if(REG_F & CF) {
+        CLOCK_CYCLES(8);
+    } else {
+        PC.LO = READ(SP.W++);
+        PC.HI = READ(SP.W++);
+        CLOCK_CYCLES(20);
+    }
 case 0xD1: //POP DE
-	REG_E = READ(SP.W++);
-	REG_D = READ(SP.W++);
-	CLOCK_CYCLES(12);
+    REG_E = READ(SP.W++);
+    REG_D = READ(SP.W++);
+    CLOCK_CYCLES(12);
 case 0xD2: //JP NC, a16
-	if(REG_F & CF) {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	} else {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W);
-		PC.W = TR.W;
-		CLOCK_CYCLES(16);
-	}
+    if(REG_F & CF) {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    } else {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W);
+        PC.W = TR.W;
+        CLOCK_CYCLES(16);
+    }
 case 0xD3:
-	INVALID_OPCODE(0xD3);
+    INVALID_OPCODE(0xD3);
 case 0xD4: //CALL NC, a16
-	if(REG_F & CF) {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	} else {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W++);
-		WRITE(--SP.W, PC.HI);
-		WRITE(--SP.W, PC.LO);
-		PC.W = TR.W;
-		CLOCK_CYCLES(24);
-	}
+    if(REG_F & CF) {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    } else {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W++);
+        WRITE(--SP.W, PC.HI);
+        WRITE(--SP.W, PC.LO);
+        PC.W = TR.W;
+        CLOCK_CYCLES(24);
+    }
 case 0xD5: //PUSH DE
-	WRITE(--SP.W, REG_D);
-	WRITE(--SP.W, REG_E);
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, REG_D);
+    WRITE(--SP.W, REG_E);
+    CLOCK_CYCLES(16);
 case 0xD6: //SUB d8
-	TR.HI = READ(PC.W++);
-	REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
-	REG_A -= TR.HI;
-	CLOCK_CYCLES(8);
+    TR.HI = READ(PC.W++);
+    REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
+    REG_A -= TR.HI;
+    CLOCK_CYCLES(8);
 case 0xD7: //RST 10H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x10;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x10;
+    CLOCK_CYCLES(16);
 case 0xD8: //RET C
-	if(REG_F & CF) {
-		PC.LO = READ(SP.W++);
-		PC.HI = READ(SP.W++);
-		CLOCK_CYCLES(20);
-	} else {
-		CLOCK_CYCLES(8);
-	}
+    if(REG_F & CF) {
+        PC.LO = READ(SP.W++);
+        PC.HI = READ(SP.W++);
+        CLOCK_CYCLES(20);
+    } else {
+        CLOCK_CYCLES(8);
+    }
 case 0xD9: //RETI
-	gb->ime_flag = 1;
-	PC.LO = READ(SP.W++);
-	PC.HI = READ(SP.W++);
-	CLOCK_CYCLES(16);
+    gb->ime_flag = 1;
+    PC.LO = READ(SP.W++);
+    PC.HI = READ(SP.W++);
+    CLOCK_CYCLES(16);
 case 0xDA: //JP C, a16
-	if(REG_F & CF) {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W);
-		PC.W = TR.W;
-		CLOCK_CYCLES(16);
-	} else {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & CF) {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W);
+        PC.W = TR.W;
+        CLOCK_CYCLES(16);
+    } else {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    }
 case 0xDB:
-	INVALID_OPCODE(0xDB);
+    INVALID_OPCODE(0xDB);
 case 0xDC: //CALL C, a16
-	if(REG_F & CF) {
-		TR.LO = READ(PC.W++);
-		TR.HI = READ(PC.W++);
-		WRITE(--SP.W, PC.HI);
-		WRITE(--SP.W, PC.LO);
-		PC.W = TR.W;
-		CLOCK_CYCLES(24);
-	} else {
-		PC.W += 2;
-		CLOCK_CYCLES(12);
-	}
+    if(REG_F & CF) {
+        TR.LO = READ(PC.W++);
+        TR.HI = READ(PC.W++);
+        WRITE(--SP.W, PC.HI);
+        WRITE(--SP.W, PC.LO);
+        PC.W = TR.W;
+        CLOCK_CYCLES(24);
+    } else {
+        PC.W += 2;
+        CLOCK_CYCLES(12);
+    }
 case 0xDE: //SBC A, d8
 {
     u8 R1 = REG_A;
@@ -946,57 +946,57 @@ case 0xDE: //SBC A, d8
 
     REG_A = R1;
     /*
-	TR.HI = READ(PC.W++) - ((REG_F & CF) >> 4);
-	REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
-	REG_A -= TR.HI;
+    TR.HI = READ(PC.W++) - ((REG_F & CF) >> 4);
+    REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
+    REG_A -= TR.HI;
     */
-	CLOCK_CYCLES(8);
+    CLOCK_CYCLES(8);
 }
 case 0xDF: //RST 18H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x18;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x18;
+    CLOCK_CYCLES(16);
 case 0xE0: //LDH (a8), A
-	/*
-	TR.HI = 0xFF;
-	TR.LO = READ(PC.W++);
-	WRITE(TR.W, REG_A);
-	*/
-	WRITE(0xFF00+READ(PC.W++), REG_A);
-	CLOCK_CYCLES(12);
+    /*
+    TR.HI = 0xFF;
+    TR.LO = READ(PC.W++);
+    WRITE(TR.W, REG_A);
+    */
+    WRITE(0xFF00+READ(PC.W++), REG_A);
+    CLOCK_CYCLES(12);
 case 0xE1: //POP HL
-	REG_L = READ(SP.W++);
-	REG_H = READ(SP.W++);
-	CLOCK_CYCLES(12);
+    REG_L = READ(SP.W++);
+    REG_H = READ(SP.W++);
+    CLOCK_CYCLES(12);
 case 0xE2: //LD (C), A
-	/*
-	TR.HI = 0xFF;
-	TR.LO = REG_C;
-	WRITE(TR.W, REG_A);
-	*/
-	WRITE(0xFF00+REG_C, REG_A);
-	CLOCK_CYCLES(8);
+    /*
+    TR.HI = 0xFF;
+    TR.LO = REG_C;
+    WRITE(TR.W, REG_A);
+    */
+    WRITE(0xFF00+REG_C, REG_A);
+    CLOCK_CYCLES(8);
 case 0xE3:
-	INVALID_OPCODE(0xE3);
+    INVALID_OPCODE(0xE3);
 case 0xE4:
-	INVALID_OPCODE(0xE4);
+    INVALID_OPCODE(0xE4);
 case 0xE5: //PUSH HL
-	WRITE(--SP.W, REG_H);
-	WRITE(--SP.W, REG_L);
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, REG_H);
+    WRITE(--SP.W, REG_L);
+    CLOCK_CYCLES(16);
 case 0xE6: //AND d8
-	TR.HI = READ(PC.W++);
-	REG_A &= TR.HI;
-	REG_F = (REG_A ? 0 : ZF) | HF;
-	CLOCK_CYCLES(8);
+    TR.HI = READ(PC.W++);
+    REG_A &= TR.HI;
+    REG_F = (REG_A ? 0 : ZF) | HF;
+    CLOCK_CYCLES(8);
 case 0xE7: //RST 20H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x20;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x20;
+    CLOCK_CYCLES(16);
 case 0xE8: //ADD SP, r8
 {
     //TODO clean this up
@@ -1021,84 +1021,84 @@ case 0xE8: //ADD SP, r8
     /* 
     offset = (s8)READ(PC.W++);
     printf("SP=%d (%X) offset=%i", SP.W, SP.W, offset);
-	TR.W = ((int)SP.W + offset);
+    TR.W = ((int)SP.W + offset);
     printf(" TR.W=%d (%X)\n", TR.W, TR.W);
     u8 wat = 
     if(offset >= 0) {
         REG_F = (((SP.W ^ offset ^ TR.W) & 0x1000) ? HF : 0) | (SP.W > TR.W ? CF : 0);
     } else {
         REG_F = (((SP.W ^ offset ^ TR.W) & 0x1000) ? HF : 0) | (SP.W < TR.W ? CF : 0);
-    }	
-	SP.W = TR.W;
+    }   
+    SP.W = TR.W;
     */
-	CLOCK_CYCLES(16);
+    CLOCK_CYCLES(16);
 }
 case 0xE9: //JP (HL)
-	PC.W = HL.W;
-	CLOCK_CYCLES(4);
+    PC.W = HL.W;
+    CLOCK_CYCLES(4);
 case 0xEA: //LD(a16), A
-	TR.LO = READ(PC.W++);
-	TR.HI = READ(PC.W++);
-	WRITE(TR.W, REG_A);
-	CLOCK_CYCLES(16);
+    TR.LO = READ(PC.W++);
+    TR.HI = READ(PC.W++);
+    WRITE(TR.W, REG_A);
+    CLOCK_CYCLES(16);
 case 0xEB:
-	INVALID_OPCODE(0xEB);
+    INVALID_OPCODE(0xEB);
 case 0xEC:
-	INVALID_OPCODE(0xEC);
+    INVALID_OPCODE(0xEC);
 case 0xED:
-	INVALID_OPCODE(0xED);
+    INVALID_OPCODE(0xED);
 case 0xEE: //XOR d8
-	TR.HI = READ(PC.W++);
-	REG_A ^= TR.HI;
-	REG_F = (REG_A ? 0 : ZF);
-	CLOCK_CYCLES(8);
+    TR.HI = READ(PC.W++);
+    REG_A ^= TR.HI;
+    REG_F = (REG_A ? 0 : ZF);
+    CLOCK_CYCLES(8);
 case 0xEF: //RST 28H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x28;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x28;
+    CLOCK_CYCLES(16);
 case 0xF0: //LDH A, (a8)
-	/*
-	TR.HI = 0xFF;
-	TR.LO = READ(PC.W++);
-	REG_A = READ(TR.W);
-	*/
-	REG_A = READ(0xFF00+READ(PC.W++));
-	CLOCK_CYCLES(12);
+    /*
+    TR.HI = 0xFF;
+    TR.LO = READ(PC.W++);
+    REG_A = READ(TR.W);
+    */
+    REG_A = READ(0xFF00+READ(PC.W++));
+    CLOCK_CYCLES(12);
 case 0xF1: //POP AF
-	REG_F = READ(SP.W++);
+    REG_F = READ(SP.W++);
     //ADDED FOR TESTING
     REG_F &= 0xF0;
-	REG_A = READ(SP.W++);
-	CLOCK_CYCLES(12);
+    REG_A = READ(SP.W++);
+    CLOCK_CYCLES(12);
 case 0xF2: //LD A, (C)
-	/*
-	TR.HI = 0xFF;
-	TR.LO = REG_C;
-	REG_A = READ(TR.W);
-	*/
-	REG_A = READ(0xFF00+REG_C);
-	CLOCK_CYCLES(8);
+    /*
+    TR.HI = 0xFF;
+    TR.LO = REG_C;
+    REG_A = READ(TR.W);
+    */
+    REG_A = READ(0xFF00+REG_C);
+    CLOCK_CYCLES(8);
 case 0xF3: //DI
-	gb->ime_flag = 0;
-	CLOCK_CYCLES(4);
+    gb->ime_flag = 0;
+    CLOCK_CYCLES(4);
 case 0xF4:
-	INVALID_OPCODE(0xF4);
+    INVALID_OPCODE(0xF4);
 case 0xF5: //PUSH AF
-	WRITE(--SP.W, REG_A);
-	WRITE(--SP.W, REG_F);
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, REG_A);
+    WRITE(--SP.W, REG_F);
+    CLOCK_CYCLES(16);
 case 0xF6: //OR d8
-	REG_A |= READ(PC.W++);
-	REG_F = (REG_A ? 0 : ZF);
-	CLOCK_CYCLES(8);
+    REG_A |= READ(PC.W++);
+    REG_F = (REG_A ? 0 : ZF);
+    CLOCK_CYCLES(8);
 case 0xF7: //RST 30H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x30;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x30;
+    CLOCK_CYCLES(16);
 case 0xF8: //LD HL, SP + r8
 {
     //TODO clean this up
@@ -1121,7 +1121,7 @@ case 0xF8: //LD HL, SP + r8
 
 
 /*
-	offset = READ(PC.W++);
+    offset = READ(PC.W++);
     TR.W = SP.W + offset;
     if(offset >= 0) {
         REG_F = (((SP.W ^ TR.W ^ offset) & 0x1000 ? HF : 0) | (SP.W > TR.W ? CF : 0));
@@ -1133,27 +1133,27 @@ case 0xF8: //LD HL, SP + r8
     CLOCK_CYCLES(12);
 }
 case 0xF9: //LD SP, HL
-	SP.W = HL.W;
-	CLOCK_CYCLES(8);
+    SP.W = HL.W;
+    CLOCK_CYCLES(8);
 case 0xFA: //LD A, (a16)
-	TR.LO = READ(PC.W++);
-	TR.HI = READ(PC.W++);
-	REG_A = READ(TR.W);
-	CLOCK_CYCLES(16);
+    TR.LO = READ(PC.W++);
+    TR.HI = READ(PC.W++);
+    REG_A = READ(TR.W);
+    CLOCK_CYCLES(16);
 case 0xFB: //EI
-	gb->ime_flag = 1;
-	CLOCK_CYCLES(4);
+    gb->ime_flag = 1;
+    CLOCK_CYCLES(4);
 case 0xFC:
-	INVALID_OPCODE(0xFC);
+    INVALID_OPCODE(0xFC);
 case 0xFD:
-	INVALID_OPCODE(0xFD);
+    INVALID_OPCODE(0xFD);
 case 0xFE: //CP d8
-	TR.HI = READ(PC.W++);
-	REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
-	CLOCK_CYCLES(8);
+    TR.HI = READ(PC.W++);
+    REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
+    CLOCK_CYCLES(8);
 case 0xFF: //RST 38H
-	WRITE(--SP.W, PC.HI);
-	WRITE(--SP.W, PC.LO);
-	PC.HI = 0;
-	PC.LO = 0x38;
-	CLOCK_CYCLES(16);
+    WRITE(--SP.W, PC.HI);
+    WRITE(--SP.W, PC.LO);
+    PC.HI = 0;
+    PC.LO = 0x38;
+    CLOCK_CYCLES(16);

@@ -20,39 +20,39 @@ typedef union
 } Z80Register;
 
 typedef struct {
-	bool running;
-	bool waiting_for_interrupt;
+    bool running;
+    bool waiting_for_interrupt;
 
     u16 hdma_source;
     u16 hdma_destination;
     u16 hdma_transfer_length;
 
     bool hdma_active;
-	
-	s32 timer_counter;
-	s32 scanline_counter;
-	
-	u32 cycles;
-	u32 mode_cycles;
-	u32 divider_counter;
-	
-	Z80Register PC;
-	Z80Register SP;
-	Z80Register BC;
-	Z80Register DE;
-	Z80Register HL;
-	Z80Register AF; 
-	Z80Register IR;
-	
+    
+    s32 timer_counter;
+    s32 scanline_counter;
+    
+    u32 cycles;
+    u32 mode_cycles;
+    u32 divider_counter;
+    
+    Z80Register PC;
+    Z80Register SP;
+    Z80Register BC;
+    Z80Register DE;
+    Z80Register HL;
+    Z80Register AF; 
+    Z80Register IR;
+    
 } CpuState;
 //TODO temp
 void print_cpu_state();
 extern CpuState cpu_state;
 typedef enum {
-	STOPPED,
-	STARTED,
-	PAUSED,
-	EM_INVALID,
+    STOPPED,
+    STARTED,
+    PAUSED,
+    EM_INVALID,
 } EmulatorState;
 void change_emulator_state( EmulatorState new_state );
 

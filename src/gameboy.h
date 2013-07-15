@@ -64,16 +64,16 @@ extern GameboyColor* gb;
 
 
 typedef enum {
-	UP,
-	DOWN,
-	RIGHT,
-	LEFT,
-	A,
-	B,
-	START,
-	SELECT,
+    UP,
+    DOWN,
+    RIGHT,
+    LEFT,
+    A,
+    B,
+    START,
+    SELECT,
 
-	INVALID,
+    INVALID,
 } Button;
 
 void gameboy_toggle_button( Button button, bool pressed );

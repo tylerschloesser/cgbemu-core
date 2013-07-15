@@ -26,10 +26,10 @@ void close_log()
 
 void write_log( const char* format, ... )
 {
-	va_list args;
-	va_start(args, format);
-	vfprintf(output_log, format, args);
-	va_end(args);
+    va_list args;
+    va_start(args, format);
+    vfprintf(output_log, format, args);
+    va_end(args);
 }
 
 

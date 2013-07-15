@@ -7,13 +7,13 @@
 #include "screen.h"
 
 
-#define INVALID_WRITE( location )															\
-			/*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/ 	\
-			return
-			
-#define INVALID_READ( location )															\
-			/*fprintf( stderr, "attempted to read from invalid location: %04X\n", location );*/ 	\
-			return 0
+#define INVALID_WRITE( location )                                                           \
+            /*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/  \
+            return
+            
+#define INVALID_READ( location )                                                            \
+            /*fprintf( stderr, "attempted to read from invalid location: %04X\n", location );*/     \
+            return 0
             
 int get_checksum(uint8_t* buffer, int size) {
     int i;
@@ -409,29 +409,29 @@ void memory_write(uint16_t location, uint8_t data)
         cartridge->write(location, data);
         return;
     }
-	else if(location < 0x10000) /* E000-FFFF */
-	{
+    else if(location < 0x10000) /* E000-FFFF */
+    {
         if(location < 0xFE00) 
-		{
+        {
             /* E000-FDFF echo RAM (not usable) */
-			INVALID_WRITE( location );	
+            INVALID_WRITE( location );  
         } 
-		else if(location < 0xFEA0) 
-		{
-			/* FE00-FE9F oject attribute memory */
+        else if(location < 0xFEA0) 
+        {
+            /* FE00-FE9F oject attribute memory */
             int offset = 0xFE00;
-            gb->oam[location - offset] = data;	
+            gb->oam[location - offset] = data;  
         }
-		else if (location < 0xFF00) 
-		{
-			INVALID_WRITE( location );	
+        else if (location < 0xFF00) 
+        {
+            INVALID_WRITE( location );  
         }
-		else if(location < 0xFF80)  
-		{
-			/* FF00-FF7F hardware registers */
+        else if(location < 0xFF80)  
+        {
+            /* FF00-FF7F hardware registers */
             int offset = 0xFF00;
-			
-			switch(location - offset) {
+            
+            switch(location - offset) {
                 case LCDC:
                     update_lcd_control_register(data);
                     break;
@@ -450,8 +450,8 @@ void memory_write(uint16_t location, uint8_t data)
                     }
                     break;
                 }
-				case HDMA5:
-				{
+                case HDMA5:
+                {
                     if(hdma_active == true) {
                         if((data & 0x80) == 0x00) {
                             /* cancel the DMA */
@@ -509,66 +509,66 @@ void memory_write(uint16_t location, uint8_t data)
                         }
                     }
 
-					return;
-				}
-				case DMA:
-				{
-					//DMA transfer
-					int dma_source = data << 8;
-					int i;
-					for(i = 0; i < 0xA0; ++i) {
-							memory_write(0xFE00 + i, memory_read(dma_source + i));
-					}
+                    return;
+                }
+                case DMA:
+                {
+                    //DMA transfer
+                    int dma_source = data << 8;
+                    int i;
+                    for(i = 0; i < 0xA0; ++i) {
+                            memory_write(0xFE00 + i, memory_read(dma_source + i));
+                    }
                     /* temp */
                     gb->hw_registers[DMA] = data;
-					return;
-				}
-				case DIV:
-				case LY:
-					/* writing to these registers resets their value */
-					data = 0;
-					break;
-				case TAC:
-				{
+                    return;
+                }
+                case DIV:
+                case LY:
+                    /* writing to these registers resets their value */
+                    data = 0;
+                    break;
+                case TAC:
+                {
                     //TODO TEMP
 
                     //if(data == 0x05) cpu_step = true;
 
-					//update timer control
-					if((gb->hw_registers[TAC] & 0x3) != (data & 0x3)) {
-						//frequency has changed
-						u32 timer_counter = 0;
-						switch(data & 0x3) { case 0x0:
-								timer_counter = 1024;
-								break;
-							case 0x1:
-								timer_counter = 16;
-								break;
-							case 0x2:
-								timer_counter = 64;
-								break;
-							case 0x3:
-								timer_counter = 256;
-								break;
-						}
-						if( timer_counter != 0 ) {
-							cpu_set_timer_countr( timer_counter );
-						}
-					}
+                    //update timer control
+                    if((gb->hw_registers[TAC] & 0x3) != (data & 0x3)) {
+                        //frequency has changed
+                        u32 timer_counter = 0;
+                        switch(data & 0x3) { case 0x0:
+                                timer_counter = 1024;
+                                break;
+                            case 0x1:
+                                timer_counter = 16;
+                                break;
+                            case 0x2:
+                                timer_counter = 64;
+                                break;
+                            case 0x3:
+                                timer_counter = 256;
+                                break;
+                        }
+                        if( timer_counter != 0 ) {
+                            cpu_set_timer_countr( timer_counter );
+                        }
+                    }
                     break;
-				}	
-				case SVBK: 
-				{
-					//assert(data < 8);
-					/* writing 0 will select bank 1 */
-					if(data == 0) {
-						data = 1;
-					}
+                }   
+                case SVBK: 
+                {
+                    //assert(data < 8);
+                    /* writing 0 will select bank 1 */
+                    if(data == 0) {
+                        data = 1;
+                    }
                     gb->hw_registers[SVBK] = data;
                     gameboy_update_selected_ram();
                     //update_selected_gameboy_ram_bank();
                     return;
-				}
+                }
                 case VBK:
                 {
                     gb->hw_registers[VBK] = (data & 0x01);
@@ -576,60 +576,60 @@ void memory_write(uint16_t location, uint8_t data)
                     gameboy_update_selected_vram();
                     return;
                 }
-				case BCPD:
-				{
-					/* background pallete data */
-					int pallete_index = gb->hw_registers[BCPS] & 0x3F;
-					gb->bg_pallete[pallete_index] = data;
-					if(gb->hw_registers[BCPS] & 0x80) {
-						/* auto increment */
-						++gb->hw_registers[BCPS];
-					}
-					gb->hw_registers[BCPS] &= 0xBF;
-					// return because 
-					return;
-				}
-				case OCPD:
-				{
-					// sprite pallete data
-					int pallete_index = gb->hw_registers[OCPS] & 0x3F;
-					gb->ob_pallete[pallete_index] = data;
-					if(gb->hw_registers[OCPS] & 0x80) {
-						++gb->hw_registers[OCPS];
-					}
-					gb->hw_registers[OCPS] &= 0xBF;
-					return;
-				}
-				case BLCK:
-				{
-					if(data == 0x11) {
+                case BCPD:
+                {
+                    /* background pallete data */
+                    int pallete_index = gb->hw_registers[BCPS] & 0x3F;
+                    gb->bg_pallete[pallete_index] = data;
+                    if(gb->hw_registers[BCPS] & 0x80) {
+                        /* auto increment */
+                        ++gb->hw_registers[BCPS];
+                    }
+                    gb->hw_registers[BCPS] &= 0xBF;
+                    // return because 
+                    return;
+                }
+                case OCPD:
+                {
+                    // sprite pallete data
+                    int pallete_index = gb->hw_registers[OCPS] & 0x3F;
+                    gb->ob_pallete[pallete_index] = data;
+                    if(gb->hw_registers[OCPS] & 0x80) {
+                        ++gb->hw_registers[OCPS];
+                    }
+                    gb->hw_registers[OCPS] &= 0xBF;
+                    return;
+                }
+                case BLCK:
+                {
+                    if(data == 0x11) {
                         if(gb->use_bios) {
                             gameboy_disable_bios();
                         }
-					}
-				}
-			}
-			
-			gb->hw_registers[location - offset] = data;
+                    }
+                }
+            }
+            
+            gb->hw_registers[location - offset] = data;
         }
-		else if(location < 0xFFFF) 
-		{
+        else if(location < 0xFFFF) 
+        {
             /* FF80-FFFE zero page */
             int offset = 0xFF80;
             gb->hram[location - offset] = data;
         } 
-		else if(location == 0xFFFF) 
-		{
+        else if(location == 0xFFFF) 
+        {
             /* FFFF interrupt enable */
             gb->ie_register = data;
         } 
-		else 
-		{
-			/* not possible */
+        else 
+        {
+            /* not possible */
         }
     } 
-	else 
-	{
+    else 
+    {
         INVALID_WRITE( location );
     }
 }
@@ -639,58 +639,58 @@ uint8_t memory_read(uint16_t location) {
     if(location < 0xE000) {
         return cartridge->read(location);
     }
-   	else if (location < 0x10000) /* E000-FFFF */
-	{
+    else if (location < 0x10000) /* E000-FFFF */
+    {
         if(location < 0xFE00) 
-		{
+        {
             /* E000-FDFF Echo RAM (maps to C000-DDFF) */
-			return memory_read( location - 0x2000 );	
+            return memory_read( location - 0x2000 );    
         } 
-		else if(location < 0xFEA0) 
-		{
+        else if(location < 0xFEA0) 
+        {
             /* FE00-FE9F object attribute memory */
             int offset = 0xFE00;
             return gb->oam[location - offset];
         } 
-		else if(location < 0xFF00) 
-		{
-			INVALID_READ( location );
+        else if(location < 0xFF00) 
+        {
+            INVALID_READ( location );
         } 
-		else if(location < 0xFF80) 
-		{
-			/* FF00-FF7F hardware registers */
+        else if(location < 0xFF80) 
+        {
+            /* FF00-FF7F hardware registers */
             int offset = 0xFF00;
-			/* handle special cases */
-			switch(location - offset) 
-			{
-				case P1: /* joypad register */
+            /* handle special cases */
+            switch(location - offset) 
+            {
+                case P1: /* joypad register */
                 {
                     u8 joypad_state = get_joypad_state();
                     return joypad_state;
                 }
-			}
+            }
             return gb->hw_registers[location - offset];
         } 
-		else if(location < 0xFFFF) 
-		{
+        else if(location < 0xFFFF) 
+        {
             /* FF80-FFFE zero page */
             int offset = 0xFF80;
             return gb->hram[location - offset];
         } 
-		else if (location == 0xFFFF) 
-		{
+        else if (location == 0xFFFF) 
+        {
             /* FFFF interrupt enable */
             return gb->ie_register; 
         } 
-		else 
-		{
+        else 
+        {
             /* not possible */
         }
     } 
-	else 
-	{
-		INVALID_READ( location );
+    else 
+    {
+        INVALID_READ( location );
     }
-	return 0;
+    return 0;
 }
 
