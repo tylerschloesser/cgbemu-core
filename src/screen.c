@@ -26,6 +26,9 @@ uint8_t scanline_obj_priority[160];
 
 
 uint16_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+uint16_t* get_screen_buffer(void) {
+    return (uint16_t*)screen_buffer;
+}
 
 static bool screen_initialized = false;
 

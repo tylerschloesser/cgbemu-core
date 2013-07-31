@@ -7,6 +7,7 @@
 
 #include "screen.h"
 
+static bool gameboy_initialized = false;
 GameboyColor* gb = NULL;
 
 void gameboy_toggle_speed() {
@@ -23,28 +24,8 @@ void swap(uint8_t* a, uint8_t* b) {
     *b = c;
 }
 
-void gameboy_load_bios(uint8_t* buffer, int size)
-{
-    assert(buffer);
-    assert(size > 0);
-    assert(gb);
-    assert(gb->bios);
 
-    if(size != GAMEBOY_BIOS_SIZE) {
-        printf("invalid bios size\n");
-        return;
-    }
-
-    memcpy(gb->bios, buffer, size);
-
-    if(gb->use_bios) {
-        gameboy_enable_bios();
-    }
-}
-
-
-
-void gameboy_enable_bios()
+static void enable_bios()
 {
     assert(gb);
     assert(gb->bios);
@@ -66,60 +47,96 @@ void gameboy_disable_bios() {
     assert(gb);
 
     if(gb->use_bios)
-        gameboy_enable_bios();
+        enable_bios();
 
 }
 
 
+static int read_bios(const char* filepath) {
+    assert(gb);
+    assert(gb->bios);
+    fprintf(stderr, "read_bios(filepath=%s)\n", filepath);
+    FILE* file = fopen(filepath, "rb");
 
-static bool gameboy_initialized = false;
-void initialize_gameboy(void)
+    if(!file) {
+        perror("fopen() failed");
+        return 1;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    rewind(file);
+
+    if(size != GAMEBOY_BIOS_SIZE) {
+        fprintf(stderr, "Invalid BIOS\n");
+        return 1;
+    }
+
+    if(fread(gb->bios, 1, GAMEBOY_BIOS_SIZE, file) == 0) {
+        perror("fread() failed");
+        fclose(file);
+        return 1;
+    }
+    
+    fclose(file);
+    return 0;
+}
+
+/**
+ * If bios_filepath is null, don't use the bios
+ */
+int initialize_gameboy(const char* bios_filepath)
 {
+    fprintf(stderr, "initialize_gameboy(bios_filepath=%s\n", bios_filepath);
     assert(gameboy_initialized == false);
+
     gb = (GameboyColor*)calloc(sizeof(GameboyColor), 1);
 
     assert(gb);
-    if(!gb) return;
+    if(!gb) return 1;
 
-    gb->ram  = (uint8_t*)calloc(GAMEBOY_RAM_SIZE,  1);
-    gb->vram = (uint8_t*)calloc(GAMEBOY_VRAM_SIZE, 1);
-    gb->oam  = (uint8_t*)calloc(GAMEBOY_OAM_SIZE,  1);
-    gb->bios = (uint8_t*)calloc(GAMEBOY_BIOS_SIZE, 1);
-
-    gb->bg_pallete = (uint8_t*)calloc(GAMEBOY_BG_PALLETE_SIZE, 1);
-    gb->ob_pallete = (uint8_t*)calloc(GAMEBOY_OB_PALLETE_SIZE, 1);
-
-    gb->hram = (uint8_t*)calloc(GAMEBOY_HRAM_SIZE, 1);
-    //gb->hw_registers = (uint8_t*)calloc(GAMEBOY_HW_REGISTERS_SIZE, 1);
     gb->hw_registers = hw_registers;
 
-    assert(gb->ram);
-    assert(gb->vram);
-    assert(gb->oam);
-    assert(gb->bios);
+    uint8_t* buffer = calloc(
+              GAMEBOY_RAM_SIZE 
+            + GAMEBOY_VRAM_SIZE 
+            + GAMEBOY_OAM_SIZE 
+            + GAMEBOY_BIOS_SIZE 
+            + GAMEBOY_BG_PALLETE_SIZE 
+            + GAMEBOY_OB_PALLETE_SIZE 
+            + GAMEBOY_HRAM_SIZE, 1);
 
-    assert(gb->bg_pallete);
-    assert(gb->ob_pallete);
-    assert(gb->hram);
-    assert(gb->hw_registers);
-
+    gb->ram = buffer;
+    gb->vram = (buffer += GAMEBOY_RAM_SIZE);
+    gb->oam = (buffer += GAMEBOY_VRAM_SIZE);
+    gb->bios = (buffer += GAMEBOY_OAM_SIZE);
+    gb->bg_pallete = (buffer += GAMEBOY_BIOS_SIZE);
+    gb->ob_pallete = (buffer += GAMEBOY_BG_PALLETE_SIZE);
+    gb->hram = (buffer += GAMEBOY_HRAM_SIZE);
     
-    gb->hw_registers[SVBK] = 1; /* selected ram bank */
-    gb->hw_registers[VBK]  = 0; /* selected vram bank */    
-
-
-    //gb->hw_registers[BLCK] = 0x11; /* bios (initially disabled) */
-    //gb->use_bios = false;
-
-    gb->hw_registers[BLCK] = 0x00;
-    gb->use_bios = false;
+    if(bios_filepath) {
+        if(read_bios(bios_filepath) != 0) {
+            return 1;
+        }
+        gb->use_bios = true;
+        gb->hw_registers[BLCK] = 0x00;
+        enable_bios();
+    } else {
+        gb->use_bios = false;
+        gb->hw_registers[BLCK] = 0x11;
+    }
 
     gameboy_update_selected_ram();
     gameboy_update_selected_vram();
 
     gameboy_initialized = true;
+
+    return 0;
 }
 
+/**
+ * TODO is selected ram bank 0 allowed?
+ */
 void gameboy_update_selected_ram()
 {
     u32 ram_bank = gb->hw_registers[SVBK];
@@ -130,73 +147,6 @@ void gameboy_update_selected_vram()
 {
     u32 vram_bank = gb->hw_registers[VBK];
     gb->selected_vram = &gb->vram[vram_bank * 0x2000];
-}
-
-
-void gameboy_power_on() 
-{
-
-    
-    initialize_gameboy();
-    initialize_cpu();
-    initialize_joypad();
-    initialize_screen();
-    
-    return;
-}
-
-void gameboy_power_off()
-{
-    printf("gameboy_power_off()\n");
-    stop_cpu();
-}
-
-
-void gameboy_toggle_button( Button button, bool pressed )
-{
-
-    assert( button != INVALID );
-
-    // temporary to allow for the new interface
-    int gb_key = -1;
-    switch( button )
-    {
-        case UP:
-            gb_key = JOYPAD_UP;
-            break;
-        case DOWN:
-            gb_key = JOYPAD_DOWN;
-            break;
-        case LEFT:
-            gb_key = JOYPAD_LEFT;
-            break;
-        case RIGHT:
-            gb_key = JOYPAD_RIGHT;
-            break;
-        case START:
-            gb_key = JOYPAD_START;
-            break;
-        case SELECT:
-            gb_key = JOYPAD_SELECT;
-            break;
-        case A:
-            gb_key = JOYPAD_A;
-            break;
-        case B:
-            gb_key = JOYPAD_B;
-            break;
-        case INVALID:
-            return;
-    }
-    
-    if( gb_key != -1 )
-    {
-        if( pressed == true ) {
-            joypad_down( gb_key );
-        } else {
-            joypad_up( gb_key );
-        }
-    }
 }
 
 int get_save_state_size() {
@@ -225,12 +175,18 @@ int get_save_state_size() {
     return save_state_size;
 }
 
+/**
+ * memcpy increment destination
+ */
 void memcpy_id(uint8_t** dest_p, uint8_t* src, int size) {
     uint8_t* dest = (*dest_p);
     memcpy(dest, src, size);
     (*dest_p) += size;
 }
 
+/**
+ * memcpy increment source
+ */
 void memcpy_is(uint8_t* dest, uint8_t** src_p, int size) {
     uint8_t* src = *src_p;
     memcpy(dest, src, size);

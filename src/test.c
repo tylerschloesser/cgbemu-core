@@ -14,25 +14,21 @@
 
 #include "screen.h"
 
-//#define TEXTURE_WIDTH 256
 #define TEXTURE_WIDTH 160
-//#define TEXTURE_HEIGHT 256
 #define TEXTURE_HEIGHT 144 
 
-static int image_width = 160;
-static int image_height = 144;
+//static int image_width = 160;
+//static int image_height = 144;
 
 #define RGB565(r, g, b)  (((r) << (5+6)) | ((g) << 6) | (b))
-#define PIXELS_SIZE (sizeof(pixels[0]) * TEXTURE_WIDTH * TEXTURE_HEIGHT)
-
-uint16_t frame[FRAME_HEIGHT][FRAME_WIDTH];
+#define SCREEN_BUFFER_SIZE (sizeof(screen_buffer[0]) * TEXTURE_WIDTH * TEXTURE_HEIGHT)
 
 int window_width = 80;
 int window_height = 77;
 
 static GLuint texture = 0;
 
-static uint16_t *pixels = NULL;
+static uint16_t *screen_buffer = NULL;
 
 static int last_frame = 0;
 
@@ -135,33 +131,13 @@ void idle(void)
         glutPostRedisplay();
 }
 
-
-static void render_pixels(uint16_t *pixels)
-{
-    get_next_frame(frame);
-    
-    int x, y;
-
-    
-    for(y = 0; y < TEXTURE_HEIGHT; ++y) {
-        for(x = 0; x < TEXTURE_WIDTH; ++x) {
-            if(x < image_width && y < image_height) {
-                //*(pixels++) = RGB565(31, 31, 0);
-                *(pixels++) = frame[y][x];
-            } else {
-                *(pixels++) = RGB565(0, 31, 31);
-            }
-        }
-    }
-}
-
 void display(void)
 {
     glClear (GL_COLOR_BUFFER_BIT);
     glColor3f (1.0, 1.0, 1.0);
     
-    memset(pixels, 0, PIXELS_SIZE);
-    render_pixels(pixels);
+    //memset(screen_buffer, 0, SCREEN_BUFFER_SIZE);
+    cgbemu_run_to_vblank();
     
     glLoadIdentity();
     glTranslatef( 0, 0, 0.f );
@@ -174,7 +150,7 @@ void display(void)
         0,          /* border */
         GL_RGB,         /* format */
         GL_UNSIGNED_SHORT_5_6_5,/* type */
-        pixels);        /* pixels */
+        screen_buffer);        /* screen_buffer */
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
@@ -208,23 +184,14 @@ void reshape (int w, int h)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
-/*
-void dump_vram()
-{
-    FILE* dump = fopen("vram_dump.bin", "w");
-    fwrite(selected_gameboy_vram_bank, 1, 0x2000, dump);
-    fclose(dump);
-}
-*/
-
 void processKeyboard(int key, bool down)
 {
     switch (key) {
         case 'z':
-            cgbemu_set_button_pressed(BUTTON_B, down);
+            cgbemu_set_button_pressed(B, down);
             break;
         case 'x':
-            cgbemu_set_button_pressed(BUTTON_A, down);
+            cgbemu_set_button_pressed(A, down);
             break;
         case 'f':
             if(!down) step_through = !step_through;
@@ -253,16 +220,16 @@ void processSpecial(int key, bool down)
 {
     switch(key) {
         case GLUT_KEY_UP:
-            cgbemu_set_button_pressed(BUTTON_UP, down);
+            cgbemu_set_button_pressed(UP, down);
             break;
         case GLUT_KEY_RIGHT:
-            cgbemu_set_button_pressed(BUTTON_RIGHT, down);
+            cgbemu_set_button_pressed(RIGHT, down);
             break;
         case GLUT_KEY_DOWN:
-            cgbemu_set_button_pressed(BUTTON_DOWN, down);
+            cgbemu_set_button_pressed(DOWN, down);
             break;
         case GLUT_KEY_LEFT:
-            cgbemu_set_button_pressed(BUTTON_LEFT, down);
+            cgbemu_set_button_pressed(LEFT, down);
             break;
         case GLUT_KEY_F1:
             if(!down)
@@ -299,93 +266,18 @@ void specialUp(int key, int x, int y)
     processSpecial(key, false);
 }
 
-int open_cartridge(char* filepath)
-{
-    if(filepath == NULL)
-        filepath = "./roms/cpu_instrs.gb";
-
-
-    FILE *file = fopen(filepath, "rb");
-
-    
-
-    if(!file) {
-        perror("fopen() failed");
-        return 0;
-    }
-    
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    rewind(file);
-    
-    uint8_t* buffer = malloc(size);
-    
-    if(fread(buffer, sizeof(*buffer), size, file) == 0) {
-        perror("fread() failed");
-        fclose(file);
-        return 0;
-    }
-    
-    fclose(file);
-    
-    cgbemu_load_cartridge(buffer, size);
-    
-    free(buffer);
-    
-    return size;
-}
-
-int load_bios()
-{
-    
-    char filepath[] = "./bios/gbc_bios.bin";
-
-    FILE *file = fopen(filepath, "rb");
-
-    if(!file) {
-        perror("fopen() failed");
-        return 0;
-    }
-    
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    rewind(file);
-    
-    uint8_t* buffer = malloc(size);
-    
-    if(fread(buffer, sizeof(*buffer), size, file) == 0) {
-        perror("fread() failed");
-        fclose(file);
-        return 0;
-    }
-    
-    fclose(file);
-    
-    cgbemu_load_bios(buffer, size);
-    
-    free(buffer);
-    
-    return size;
- 
-}
-
 int main(int argc, char** argv)
 {
-    pixels = malloc(PIXELS_SIZE);
-    
-    
-    setup();
-    
-    if(argc > 1) {
-        open_cartridge(argv[1]);
-    } else {
-
-        open_cartridge(NULL);
+    if(initialize_cgbemu(argv[1], NULL) != 0) {
+        return EXIT_FAILURE;
     }
 
-    
-    load_bios();
-    
+    screen_buffer = cgbemu_get_screen_buffer();
+    if(screen_buffer == NULL) {
+        fprintf(stderr, "Failed to get screen buffer\n");
+        return EXIT_FAILURE;
+    }
+       
     glutInit(&argc, argv);
     glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize (window_width, window_height); 

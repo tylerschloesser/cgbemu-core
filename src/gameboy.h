@@ -4,9 +4,6 @@
 #include <stdbool.h>
 #include "globals.h"
 
-void gameboy_power_on();
-void gameboy_power_off();
-
 #define GAMEBOY_RAM_SIZE 0x8000
 #define GAMEBOY_VRAM_SIZE 0x4000
 /* TODO this is nNOT the correct OAM size */
@@ -20,12 +17,9 @@ void gameboy_power_off();
 #define GAMEBOY_HW_REGISTERS_SIZE 0x80
 
 
+int initialize_gameboy(const char* bios_filepath);
 
-void gameboy_enable_bios(void);
 void gameboy_disable_bios(void);
-
-void gameboy_load_cartridge(char* cartridge_filepath);
-void gameboy_load_bios(uint8_t* buffer, int size);
 
 void gameboy_save_state( char* save_state_filepath );
 void gameboy_load_state( char* save_state_filepath );
@@ -60,23 +54,6 @@ typedef struct {
 } GameboyColor;
 
 extern GameboyColor* gb;
-
-
-
-typedef enum {
-    UP,
-    DOWN,
-    RIGHT,
-    LEFT,
-    A,
-    B,
-    START,
-    SELECT,
-
-    INVALID,
-} Button;
-
-void gameboy_toggle_button( Button button, bool pressed );
 
 //TODO
 int get_save_state_size();

@@ -5,6 +5,7 @@
 
 Cartridge* cartridge = NULL;
 
+static int verify_cartridge(void);
 
 typedef struct {
     int header_value;
@@ -181,29 +182,47 @@ CartridgeType* get_cartridge_type(int header_value) {
 }
 
 static int get_cartridge_ram_size(int header_value);
-/* The contents of "buffer" are not needed after
-   this function is called
-   TODO
-   check for max size
- */
 
-int load_cartridge(const uint8_t* buffer, int buffer_size) {
-    assert(buffer != NULL);
-    assert(buffer_size > 0);
+static int read_cartridge(const char* filepath) {
+    assert(filepath);
+    FILE* file = fopen(filepath, "rb");
+
+    if(!file) {
+        perror("fopen() failed");
+        return 1;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    rewind(file);
+
+    cartridge->rom = (uint8_t*)malloc(size);
+    if(fread(cartridge->rom, 1, size, file) == 0) {
+        perror("fread() failed");
+        fclose(file);
+        return 1;
+    }
+
+    cartridge->rom_size = size;
+
+    return 0;
+}
+
+int initialize_cartridge(const char* cartridge_filepath) {
+    
+    fprintf(stderr, "initialize_cartridge(cartridge_filepath=%s)\n",
+            cartridge_filepath);
+
+    assert(cartridge_filepath);
 
     //TODO make this better
     assert(cartridge == NULL);
     cartridge = (Cartridge*)calloc(sizeof(Cartridge), 1);
     assert(cartridge != NULL);
     
-    //TODO make this better
-    assert(cartridge->rom == NULL);
-    cartridge->rom = (uint8_t*)calloc(buffer_size, 1);
-    assert(cartridge->rom != NULL);
-
-    memcpy(cartridge->rom, buffer, buffer_size);
-
-    cartridge->rom_size = buffer_size;
+    if(read_cartridge(cartridge_filepath) != 0) {
+        return 1;
+    }
 
     /* Cartridge RAM */
     cartridge->ram_size = get_cartridge_ram_size(cartridge->rom[0x0149]);
@@ -289,7 +308,7 @@ void cartridge_update_selected_ram() {
 
 
 /* TODO finish this */
-int verify_cartridge() {
+static int verify_cartridge(void) {
     
     char title[0x10];
     title[0x10 - 1] = '\0';

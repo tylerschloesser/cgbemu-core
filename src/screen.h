@@ -6,7 +6,9 @@
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 
-extern uint16_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+//extern uint16_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
+uint16_t* get_screen_buffer(void);
 void update_screen();
 
 void initialize_screen();

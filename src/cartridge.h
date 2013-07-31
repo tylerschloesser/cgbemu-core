@@ -3,8 +3,8 @@
 
 #include "globals.h"
 
-int load_cartridge(const uint8_t* buffer, int size);
-int verify_cartridge();
+
+int initialize_cartridge(const char* cartridge_filepath);
 
 typedef enum {
     NONE,
