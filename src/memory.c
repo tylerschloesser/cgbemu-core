@@ -16,9 +16,8 @@
             return 0
             
 int get_checksum(uint8_t* buffer, int size) {
-    int i;
     int sum = 0;
-    for(i = 0; i < size; ++i) {
+    for(int i = 0; i < size; ++i) {
         sum += buffer[i];
     }
     return sum;
@@ -53,8 +52,7 @@ void hdma_transfer(void)
 {
     assert(cartridge);
     
-    int i;
-    for(i = 0; i < 0x10; ++i) {
+    for(int i = 0; i < 0x10; ++i) {
         memory_write(hdma_destination++, memory_read(hdma_source++));
     } 
     hdma_transfer_length -= 0x10;
@@ -483,9 +481,7 @@ void memory_write(uint16_t location, uint8_t data)
 
                     if((data & 0x80) == 0x00) {
                         /* general purpose DMA. nothing special required */
-                        printf("General DMA\n");
-                        int i;
-                        for(i = 0; i < hdma_transfer_length; ++i) {
+                        for(int i = 0; i < hdma_transfer_length; ++i) {
                             memory_write(hdma_destination++, 
                                     memory_read(hdma_source++));
                         }
@@ -515,8 +511,7 @@ void memory_write(uint16_t location, uint8_t data)
                 {
                     //DMA transfer
                     int dma_source = data << 8;
-                    int i;
-                    for(i = 0; i < 0xA0; ++i) {
+                    for(int i = 0; i < 0xA0; ++i) {
                             memory_write(0xFE00 + i, memory_read(dma_source + i));
                     }
                     /* temp */

@@ -1,24 +1,16 @@
 #include <string.h>
+#include <assert.h>
+#include <stdio.h>
 
 #include <GL/gl.h>
 #include <GL/glext.h> 
 #include <GL/glu.h>
-
 #include <GL/freeglut.h>
 
 #include "cgbemu.h"
 
-//temp
-#include "cpu.h"
-#include "memory.h"
-
-#include "screen.h"
-
 #define TEXTURE_WIDTH 160
 #define TEXTURE_HEIGHT 144 
-
-//static int image_width = 160;
-//static int image_height = 144;
 
 #define RGB565(r, g, b)  (((r) << (5+6)) | ((g) << 6) | (b))
 #define SCREEN_BUFFER_SIZE (sizeof(screen_buffer[0]) * TEXTURE_WIDTH * TEXTURE_HEIGHT)
@@ -27,11 +19,9 @@ int window_width = 80;
 int window_height = 77;
 
 static GLuint texture = 0;
-
 static uint16_t *screen_buffer = NULL;
 
 static int last_frame = 0;
-
 static int target_elapsed = 16; // 60fps
 
 bool save_state_called = false;
@@ -93,14 +83,6 @@ void load_state_callback() {
 
      
 
-
-bool step_through = false;
-void step()
-{
-    if(step_through)
-        glutPostRedisplay();
-}
-
 void idle(void)
 {
     int current_time = glutGet(GLUT_ELAPSED_TIME);
@@ -127,8 +109,7 @@ void idle(void)
         load_state_called = false;
     }
     
-    if(!step_through) 
-        glutPostRedisplay();
+    glutPostRedisplay();
 }
 
 void display(void)
@@ -136,21 +117,20 @@ void display(void)
     glClear (GL_COLOR_BUFFER_BIT);
     glColor3f (1.0, 1.0, 1.0);
     
-    //memset(screen_buffer, 0, SCREEN_BUFFER_SIZE);
     cgbemu_run_to_vblank();
     
     glLoadIdentity();
     glTranslatef( 0, 0, 0.f );
     
-    glTexImage2D(GL_TEXTURE_2D,     /* target */
-        0,          /* level */
-        GL_RGB,         /* internal format */
-        TEXTURE_WIDTH,      /* width */
-        TEXTURE_HEIGHT,     /* height */
-        0,          /* border */
-        GL_RGB,         /* format */
-        GL_UNSIGNED_SHORT_5_6_5,/* type */
-        screen_buffer);        /* screen_buffer */
+    glTexImage2D(GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        TEXTURE_WIDTH,
+        TEXTURE_HEIGHT,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_SHORT_5_6_5,
+        screen_buffer);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
@@ -193,23 +173,8 @@ void processKeyboard(int key, bool down)
         case 'x':
             cgbemu_set_button_pressed(A, down);
             break;
-        case 'f':
-            if(!down) step_through = !step_through;
-            break;
-        case ' ':
-            if(!down) step();
-            break;
         case 'q':
             exit(EXIT_SUCCESS);
-        case 'b':
-            if(!down) enable_breakpoints = !enable_breakpoints;
-            break;
-        case 's':
-            if(!down) cpu_step = !cpu_step;
-        case 'd':
-            //dump_vram();
-            break;
-
         default:
             return;
     }
@@ -292,8 +257,6 @@ int main(int argc, char** argv)
     glutSpecialFunc(special);
     glutSpecialUpFunc(specialUp);
     
-    //fprintf(stderr, "before glutMainLoop()\n");
-
     glutMainLoop();
     return 0;
 }

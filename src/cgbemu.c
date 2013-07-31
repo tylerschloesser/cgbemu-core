@@ -8,7 +8,6 @@
 
 void cgbemu_run_to_vblank()
 {
-    start_cpu();
     emulate_cpu();
 }
 
@@ -19,10 +18,12 @@ int initialize_cgbemu(const char* cartridge_filepath, const char* bios_filepath)
         fprintf(stderr, "No cartridge filepath provided\n");
         return 1;
     }
+
+    bool use_bios = bios_filepath == NULL ? false : true;
     
     initialize_gameboy(bios_filepath);
     initialize_cartridge(cartridge_filepath);
-    initialize_cpu();
+    initialize_cpu(use_bios);
     initialize_joypad();
     initialize_screen();
 

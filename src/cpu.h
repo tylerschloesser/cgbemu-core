@@ -76,8 +76,7 @@ void cpu_set_timer_countr( int timer_countr );
 CpuState get_cpu_state();
 void set_cpu_state( CpuState cpu_state );
 
-void reinitialize_cpu();
-void initialize_cpu();
+void initialize_cpu(bool use_bios);
 
 void emulate_cpu();
 

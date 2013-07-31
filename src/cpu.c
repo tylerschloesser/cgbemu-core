@@ -1,14 +1,10 @@
-/*
-//#include <sys/time.h>
-#include <Windows.h>
-*/
-
 #include "debug.h"
 #include "cpu.h"
 #include "memory.h"
 #include "screen.h"
+#include "instructions.h"
 
-/* CPU Flags */
+// CPU Flags
 #define ZF 0x80
 #define NF 0x40
 #define HF 0x20
@@ -30,7 +26,7 @@
 #define AF                      cpu_state.AF
 #define IR                      cpu_state.IR
 
-/* 8 bit register definitions */
+// 8 bit register definitions
 #define REG_B BC.B.H
 #define REG_C BC.B.L
 #define REG_D DE.B.H
@@ -40,11 +36,11 @@
 #define REG_A AF.B.H
 #define REG_F AF.B.L
 
-/* high and low bit definitions */
+// high and low bit definitions
 #define HI B.H
 #define LO B.L
 
-/* memory access functions */
+// memory access functions
 #define READ(S) memory_read(S)
 #define WRITE(D, B) memory_write(D, B)
 
@@ -57,136 +53,20 @@
     getchar();                              \
     exit(1)
 
-/* CPU INSTRUCTIONS */
-/* Bit manipulation instructions */
-#define RES(B, R) R &= ~(1 << B)
-#define SET(B, R) R |= (1 << B)
-#define BIT(B, R) REG_F = (R & (1 << B) ? 0 : ZF) | HF | (REG_F & CF)
-
-/* Bit shift right instructions */
-#define RLC(R)  R = (R << 1) | ((R & 0x80) >> 7);               \
-                REG_F = (R ? 0 : ZF) | (R & 1 ? CF : 0)
-#define RRC(R)  R = (R >> 1) | ((R & 1) << 7);                  \
-                REG_F = (R ? 0 : ZF) | (R & 0x80 ? CF : 0)
-#define RL(R)   TR.LO = R;                                      \
-                R = (R << 1) | ((REG_F & CF) >> 4);             \
-                REG_F = (R ? 0 : ZF) | (TR.LO & 0x80 ? CF : 0)
-#define RR(R)   TR.LO = R;                                      \
-                R = (R >> 1) | ((REG_F & CF) << 3);             \
-                REG_F = (R ? 0 : ZF) | (TR.LO & 1 ? CF : 0)
-
-/* bit shift left instrucctions */
-#define SLA(R)  TR.LO = R;                                      \
-                R = (R << 1);                                   \
-                REG_F = (R ? 0 : ZF) | (TR.LO & 0x80 ? CF : 0)
-#define SRA(R)  TR.LO = R;                                      \
-                R = (R >> 1) | (R & 0x80);                      \
-                REG_F = (R ? 0 : ZF) | (TR.LO & 1 ? CF : 0)
-#define SWAP(R) R = (R << 4) | (R >> 4);                        \
-                REG_F = (R ? 0 : ZF)
-#define SRL(R)  TR.LO = R;                                      \
-                R = (R >> 1);                                   \
-                REG_F = (R ? 0 : ZF) | (TR.LO & 1 ? CF : 0)
-
-/* add instructions */
-#define ADD_BYTES(R1, R2)                                       \
-    TR.W = R1 + R2;                                             \
-    REG_F = (TR.LO ? 0 : ZF) |                                  \
-            (((R1 ^ R2 ^ TR.LO) & 0x10) ? HF : 0) |             \
-            (TR.HI ? CF :0);                                \
-    R1 = TR.LO
-    
-/*
-#define ADC_BYTES(R1, R2)                                       \
-    TR.LO = R1 + R2 + ((REG_F & CF) >> 4);                      \
-    REG_F = (TR.LO ? 0 : ZF) |                                  \
-            (((R1 ^ R2 ^ TR.LO) & 0x10) ? HF : 0) |             \
-            (TR.LO < R2 ? CF : 0);                              \
-    R1=TR.LO
-*/
-#define ADC_BYTES(R1, R2)                                       \
-    TR.W = R1 + R2 + ((REG_F & CF) ? 1 : 0);                        \
-    REG_F = (TR.LO ? 0 : ZF) |                                  \
-            (((R1 ^ R2 ^ TR.LO) & 0x10) ? HF : 0) |             \
-            (TR.HI ? CF : 0);                               \
-    R1=TR.LO
-
-/* subtract instructions */
-/*
-#define SUB_BYTES(R1, R2)                                       \
-    REG_F = ((R1 == R2) ? ZF : 0) |                             \
-            NF |                                                \
-            (((R1 & 0xF) < (R2 & 0xF)) ? HF : 0) |              \
-            ((R1 < R2) ? CF : 0);                               \
-    R1-= R2
-*/
-#define SUB_BYTES(R1, R2)                                       \
-    TR.W = R1 - R2;                                             \
-    REG_F = (TR.LO ? 0 : ZF) |                                  \
-            NF |                                                \
-            (((R1^R2^TR.LO)&0x10) ? HF : 0) |                   \
-            (TR.HI ? CF : 0);                               \
-    R1=TR.LO
-
-/*
-#define SBC_BYTES(R1, R2)                                       \
-    TR.HI = R2 + ((REG_F & CF) >> 4);                           \
-    REG_F = ((R1 == TR.HI) ? ZF : 0) |                          \
-        NF |                                                    \
-        (((R1 & 0xF) < (TR.HI & 0xF)) ? HF : 0) |               \
-        ((R1 < TR.HI) ? CF : 0);                                \
-    R1-=TR.HI
-*/
-#define SBC_BYTES(R1, R2)                                       \
-    TR.W = R1 - R2 - ((REG_F & CF) ? 1 : 0);                    \
-    REG_F = ((TR.LO) ? 0 : ZF) |                            \
-        NF |                                                    \
-        (((R1^R2^TR.LO)&0x10) ? HF : 0) |               \
-        (TR.HI ? CF : 0);                               \
-    R1=TR.LO
-
-/* bitwise operation instructions */
-#define AND_BYTE(R) REG_A &= R; REG_F = (REG_A ? 0 : ZF) | HF
-#define XOR_BYTE(R) REG_A ^= R; REG_F = (REG_A ? 0 : ZF)
-#define OR_BYTE(R)  REG_A |= R; REG_F = (REG_A ? 0 : ZF)
-
-/* move instructions */
-/*
-#define CP_BYTES(R1, R2)                                        \
-    REG_F = ((R1 == R2) ? ZF : 0) |                             \
-            NF |                                                \
-            (((R1 & 0xF) < (R2 & 0xF)) ? HF : 0) |              \
-            ((R1 < R2) ? CF : 0)
-*/
-#define CP_BYTES(R1, R2)                                        \
-    TR.W=R1-R2;\
-    REG_F = (TR.LO ? 0 : ZF) |                          \
-            NF |                                                \
-            (((R1^R2^TR.LO)&0x10) ? HF : 0) |               \
-            (TR.HI ? CF : 0)
-            
-#define LD_BYTE(R1, R2) R1 = R2
-/* END CPU INSTRUCTIONS */
-
 #define CLOCK_SPEED_HZ 4194304
 //#define VBLANK_CYCLES CLOCK_SPEED_HZ / 60
 
 #define GB_H_SYNC_KHZ 9198
 #define GB_V_SYNC_HZ 59.73
 
-/*
-    how many cycles to wait until refreshing the screen 
-    This is roughly CLOCK_SPEED_HZ / GB_V_SYNC_HZ
-*/
+// how many cycles to wait until refreshing the screen 
+// This is roughly CLOCK_SPEED_HZ / GB_V_SYNC_HZ
 #define SCREEN_REFRESH_CYCLES 70224
-
 
 #define INITIAL_TIMER_COUNTER 1024
 #define INITIAL_SCANLINE_COUNTER 456
 
 #define DISPLAY_REFRESH_RATE_HZ 60
-
-#define THREADSAFE_CPU
 
 typedef enum {
     VBLANK,
@@ -196,33 +76,9 @@ typedef enum {
     JOYPAD,
 } InterruptType;
 
-/* moved to header file
-typedef enum {
-    STOPPED,
-    STARTED,
-    PAUSED,
-    INVALID,
-} EmulatorState;
-*/
-
-static EmulatorState emulator_state = EM_INVALID;
 CpuState cpu_state;
 static bool cpu_initialized = false;
-/*
-static SDL_mutex* cpu_mutex = NULL;
-*/
-//static struct timeval time_end, time_start;
-//static u64 freq = 0;
-//static u64 last_refresh = 0;
 
-/*
-static HANDLE emulator_state_changed = NULL;
-*/
-
-//static bool cpu_debugger_enabled = false;
-/*
-static Debugger *debugger = NULL;
-*/
 u16 DAA_table[] = {
     0x0080,0x0100,0x0200,0x0300,0x0400,0x0500,0x0600,0x0700,
     0x0800,0x0900,0x1000,0x1100,0x1200,0x1300,0x1400,0x1500,
@@ -484,10 +340,6 @@ u16 DAA_table[] = {
 //static s32 timer_counter_table[] = { 1024, 16, 64, 256 };
 static s32 timer_counter_table[] = { 256, 4, 16, 64 };
 
-//TEMPORARY
-bool output_opcodes = false;
-bool fullspeed = false;
-
 /* internal functions */
 static int execute();
 static void interrupt( InterruptType type );
@@ -495,97 +347,53 @@ static void update_lcd_status();
 static void update_lcd( u32 current_cycles );
 static void update_timer( u32 current_cycles );
 static void update_divider( u32 current_cycles );
-static void service_interrupts();
+static void service_interrupts(void);
 static void sync_refresh_rate( u32 *total_cycles );
 
-void change_emulator_state( EmulatorState new_state ) {
-    emulator_state = new_state;
-}
+static bool emulating = false;
 
-
-void initialize_cpu()
+void initialize_cpu(bool use_bios)
 {
     assert( cpu_initialized == false );
 
-    change_emulator_state( PAUSED );
+    if(use_bios) {
+        PC.W = 0;
+        SP.W = 0;
+        BC.W = 0;
+        DE.W = 0;
+        HL.W = 0;
+        AF.W = 0;
+        IR.W = 0;
+        
+        timer_counter = INITIAL_TIMER_COUNTER;
+        scanline_counter = INITIAL_SCANLINE_COUNTER;    
+        cycles = 0;
+        mode_cycles = 0;
+        divider_counter = 0;
+    } else {
+        PC.W = 0x0100;
+        SP.W = 0xFFFE;
+        BC.W = 0x0000;
+        DE.W = 0xFF56;
+        HL.W = 0x000D;
+        AF.W = 0x1180;
+        IR.W = 0x00E0;
 
-    PC.W = 0;
-    SP.W = 0;
-    BC.W = 0;
-    DE.W = 0;
-    HL.W = 0;
-    AF.W = 0;
-    IR.W = 0;
-    
-    waiting_for_interrupt = false;
-    
-    timer_counter = INITIAL_TIMER_COUNTER;
-    scanline_counter = INITIAL_SCANLINE_COUNTER;    
-
-    cycles = 0;
-    mode_cycles = 0;
-    divider_counter = 0;
-    
-    cpu_initialized = true;
-    
-
-    PC.W = 0x0100;
-    SP.W = 0xFFFE;
-    BC.W = 0x0000;
-    DE.W = 0xFF56;
-    HL.W = 0x000D;
-    AF.W = 0x1180;
-    IR.W = 0x00E0;
-
-    timer_counter = 0x400;
-    scanline_counter = 0x1A0;
-    cycles = 0x8F3F;
-    mode_cycles = 0xC17055;
-    divider_counter = 0xB1;
-    
-}
-
-void reinitialize_cpu()
-{
-    printf("reinitialize_cpu()\n");
-    assert( cpu_initialized == true );
-    
-    if( emulator_state == STARTED ) {
-        stop_cpu();
+        timer_counter = 0x400;
+        scanline_counter = 0x1A0;
+        cycles = 0x8F3F;
+        mode_cycles = 0xC17055;
+        divider_counter = 0xB1;
     }
 
-    
-    cpu_initialized = false;
-    initialize_cpu();
-}
-
-void start_cpu()
-{
-    assert( cpu_initialized == true );
-    assert( emulator_state == STOPPED || emulator_state == PAUSED );
-
-    change_emulator_state( STARTED );
-}
-
-void pause_cpu()
-{
-    assert( cpu_initialized == true );
-    assert( emulator_state == STARTED );
-
-    change_emulator_state( PAUSED );
-}
-
-void stop_cpu()
-{
-    assert( cpu_initialized == true );
-    assert( emulator_state == STARTED );
-
-    change_emulator_state( STOPPED );
+    waiting_for_interrupt = false;
+    cpu_initialized = true;
 }
 
 void emulate_cpu() {
 
-    while( emulator_state != STOPPED ) {
+    emulating = true;
+    while(emulating) {
 
         u32 current_cycles = execute();
 
@@ -604,7 +412,6 @@ void emulate_cpu() {
         
         sync_refresh_rate( &cycles );
     }
-
 }
 
 /**
@@ -614,17 +421,17 @@ static void sync_refresh_rate( u32 *total_cycles )
 {
     if(*total_cycles < SCREEN_REFRESH_CYCLES) return;
     *total_cycles = 0;
-
-    /* TODO this caused an assertion fail, not sure why... */
-    //interrupt( VBLANK );
 }
 
-static void interrupt( InterruptType type ) {
+static void interrupt(InterruptType type) {
     waiting_for_interrupt = false;
     switch( type ) {
         case VBLANK:
             gb->hw_registers[IF] |= 0x01;
-            stop_cpu();
+
+            // TODO
+            emulating = false;
+
             break;
         case LCD_STATUS:
             gb->hw_registers[IF] |= 0x02;
@@ -727,15 +534,8 @@ static void update_lcd( u32 current_cycles )
             
             
             if(gb->hw_registers[LY] == 144) {
-            //if(scanline == 144) {
-
                 /* enter vertical blank period */
                 interrupt( VBLANK );
-                /*
-                update_screen();
-                */
-                
-    
             } else if(gb->hw_registers[LY] > 153) {
             //} else if(scanline > 153) {
                 /* scanline back to 0 (end of vertical blank) */
@@ -791,7 +591,7 @@ static void update_timer( u32 current_cycles )
     }
 }
 
-static void update_divider( u32 current_cycles )
+static void update_divider(u32 current_cycles)
 {
     divider_counter += current_cycles;
     
@@ -802,62 +602,43 @@ static void update_divider( u32 current_cycles )
     }
 }
 
-static void service_interrupts()
+static void service_interrupts(void)
 {
-    if( gb->ime_flag && gb->ie_register && gb->hw_registers[IF] ) {
+    if(gb->ime_flag && gb->ie_register && gb->hw_registers[IF]) {
     
-        u8 interrupt = gb->ie_register & gb->hw_registers[IF];
+        uint8_t interrupt = gb->ie_register & gb->hw_registers[IF];
+        uint16_t interrupt_address = 0;
         
-        bool serviced_interrupt = false;
-        u16 interrupt_address = 0;
-        
-        /* order of bits represents interrupt priority */
+        // Order of bits represents interrupt priority
         if( interrupt & 0x1 ) { 
-            /* vblank interrupt */
-            serviced_interrupt = true;
-
+            // Vblank interrupt
             gb->hw_registers[IF] &= ~0x1;
             interrupt_address = 0x40;
-
         } 
         else if( interrupt & 0x2 ) {
-            /* lcd interrupt */
-            serviced_interrupt = true;
-            
+            // LCD interrupt
             gb->hw_registers[IF] &= ~0x2;
             interrupt_address = 0x48;
-
         } 
         else if( interrupt & 0x4 ) {
-            /* timer interrupt */
-            serviced_interrupt = true;
-            
+            // Timer interrupt
             gb->hw_registers[IF] &= ~0x4;
             interrupt_address = 0x50;
-            
         } 
-        else if( interrupt & 0x08 ) 
-        {
-            /* serial interrupt */
-            serviced_interrupt = true;
-            
+        else if( interrupt & 0x08 ) {
+            // Serial interrupt
             gb->hw_registers[IF] &= ~0x8;
             interrupt_address = 0x58;
         }
         else if( interrupt & 0x10 ) {
-            /* joypad Interrupt */
-            serviced_interrupt = true;
-            
+            // Joypad Interrupt
             gb->hw_registers[IF] &= ~0x10;
             interrupt_address = 0x60;
         }
         
-        if( serviced_interrupt == true ) {
-            assert( interrupt_address != 0 );
-            
+        if(interrupt_address != 0) {
             WRITE( --SP.W, PC.B.H );
             WRITE( --SP.W, PC.B.L );
-            
             gb->ime_flag = 0;
             PC.W = interrupt_address;
             cycles += 16;
@@ -895,54 +676,26 @@ void print_cpu_state()
 }
 
 
-//temp
-//static bool debug_daa = false;
-bool cpu_step = false;
-bool enable_breakpoints = false;
 static int execute() {
 
-
-    uint16_t breakpoints[] = {
-        //0x0100,
-        //0x467,
-        0xf0a,
-    };
-
-    if(enable_breakpoints) {
-        int i; 
-        for(i = 0; i < (sizeof(breakpoints) / sizeof(uint16_t)); ++i) {
-            if(PC.W == breakpoints[i]) {
-                printf("breaking at %X\n", breakpoints[i]);
-                //cpu_step = true;
-            }
-           
-        }
-    }
-
-    if(cpu_step) {
-        print_cpu_state();
-        if(getchar() == 's') cpu_step = false;
-    }
-
-    /* variables that may be used by certain instructions */
+    // Variables that may be used by certain instructions
     static u8 temp;
     static Z80Register TR;
-    //static s8 offset;
 
-    /* load the next intruction */
+    // Load the next intruction
     if(waiting_for_interrupt == true) {
-        /* execute NOP instructions while waiting for interrupt */
+        // execute NOP instructions while waiting for interrupt
         IR.W = 0x00;
     } else {
         IR.W = READ(PC.W++);    
     }
 
-    /* execute the instruction and return cpu cycles */
+    // execute the instruction and return cpu cycles
     switch(IR.W) {
         #include "opcodes.h"
     }
     
-    /* program will not reach this point */
+    // program will not reach this point
     assert( false );
     return -1;
 }

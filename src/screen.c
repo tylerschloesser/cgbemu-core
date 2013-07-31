@@ -160,8 +160,7 @@ int render_background(u8 lcd_control)
     tile_row = y_position / 8;
     
     //render each pixel on the horizontal scanline
-    u8 x_pixel;
-    for( x_pixel = 0; x_pixel < SCREEN_WIDTH; ++x_pixel, ++x_position ) {
+    for(uint8_t x_pixel = 0; x_pixel < SCREEN_WIDTH; ++x_pixel, ++x_position ) {
     
     
         if(render_window) {
@@ -260,8 +259,7 @@ int render_sprites() {
     int sprite_count = 40;
     
     // loop through all 40 sprites
-    int sprite;
-    for(sprite = 0; sprite < sprite_count; ++sprite) {
+    for(int sprite = 0; sprite < sprite_count; ++sprite) {
     
         s16 y_position = ((s16)memory_read(sprite_attribute_index++)) - 16;
         s16 x_position = ((s16)memory_read(sprite_attribute_index++)) - 8;
@@ -311,9 +309,7 @@ int render_sprites() {
             u8 low = gb->vram[vram_offset + sprite_address + 0];
             //u32 color;
             
-            int sprite_pixel;
-
-            for(sprite_pixel = 0; sprite_pixel < 8; ++sprite_pixel){
+            for(int sprite_pixel = 0; sprite_pixel < 8; ++sprite_pixel){
                 
                 s8 x_bit = sprite_pixel;
                 if(x_flip == true) {

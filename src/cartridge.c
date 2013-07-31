@@ -172,8 +172,7 @@ bool get_has_battery(CartridgeType* cartridge_type) {
 CartridgeType* cartridge_type = NULL;
 
 CartridgeType* get_cartridge_type(int header_value) {
-    int i;
-    for(i = 0; i < (sizeof(cartridge_types) / sizeof(CartridgeType)); ++i) {
+    for(int i = 0; i < (sizeof(cartridge_types) / sizeof(CartridgeType)); ++i) {
         if(cartridge_types[i].header_value == header_value) {
             return &cartridge_types[i];
         }
@@ -312,8 +311,7 @@ static int verify_cartridge(void) {
     
     char title[0x10];
     title[0x10 - 1] = '\0';
-    int i;
-    for(i = 0x134; i < 0x144; ++i) {
+    for(int i = 0x134; i < 0x144; ++i) {
         title[i - 0x134] = cartridge->rom[i];
     }
     printf("Title: %s\n", title);
@@ -325,8 +323,8 @@ static int verify_cartridge(void) {
             expected_cartridge_rom_size / 1024);
     
     /* CHECKSUM */
-    u32 sum = 0;
-    for(i = 0; i < cartridge->rom_size; ++i) {
+    uint32_t sum = 0;
+    for(int i = 0; i < cartridge->rom_size; ++i) {
         sum += cartridge->rom[i];
     }
     sum -= ((u16)cartridge->rom[0x14e] + cartridge->rom[0x14f]);
