@@ -22,5 +22,5 @@ void cgbemu_run_to_vblank();
 
 void cgbemu_set_button_pressed(Button button, bool pressed);
 
-void cgbemu_save_state(uint8_t** buffer, int* size);
-void cgbemu_load_state(uint8_t* buffer, int size);
+void cgbemu_save_state(const char* filepath);
+void cgbemu_load_state(const char* filepath);

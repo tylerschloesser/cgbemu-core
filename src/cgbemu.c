@@ -21,7 +21,7 @@ int initialize_cgbemu(const char* cartridge_filepath, const char* bios_filepath)
 
     bool use_bios = bios_filepath == NULL ? false : true;
     
-    initialize_gameboy(bios_filepath);
+    initialize_gameboy(use_bios, bios_filepath);
     initialize_cartridge(cartridge_filepath);
     initialize_cpu(use_bios);
     initialize_joypad();
@@ -77,12 +77,11 @@ uint16_t* cgbemu_get_screen_buffer()
     return get_screen_buffer();
 }
 
-void cgbemu_save_state(uint8_t** buffer, int* size) {
-    (*size) = get_save_state_size();
-    save_state(buffer);
+void cgbemu_save_state(const char* filepath) {
+    gameboy_save_state(filepath);
 }
 
-void cgbemu_load_state(uint8_t* buffer, int size) {
-    load_state(buffer, size);
+void cgbemu_load_state(const char* filepath) {
+    gameboy_load_state(filepath);
 }
 

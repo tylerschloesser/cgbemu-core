@@ -9,108 +9,40 @@ static int verify_cartridge(void);
 
 typedef struct {
     int header_value;
-    bool supported;
-    char* name;
+    MemoryBankController mbc;
+    char name[32];
     int id;
 } CartridgeType;
-   
-enum {
-    ID_ROM_ONLY,
-    ID_MBC1,
-    ID_MBC1_RAM,
-    ID_MBC1_RAM_BATTERY,
-    ID_MBC2,
-    ID_MBC2_BATTERY,
-    ID_ROM_RAM,
-    ID_ROM_RAM_BATTERY,
-    ID_MMM01,
-    ID_MMM01_RAM,
-    ID_MMM01_RAM_BATTERY,
-    ID_MBC3_TIMER_BATTERY,
-    ID_MBC3_TIMER_RAM_BATTERY,
-    ID_MBC3,
-    ID_MBC3_RAM,
-    ID_MBC3_RAM_BATTERY,
-    ID_MBC4,
-    ID_MBC4_RAM,
-    ID_MBC4_RAM_BATTERY,
-    ID_MBC5,
-    ID_MBC5_RAM,
-    ID_MBC5_RAM_BATTERY,
-    ID_MBC5_RUMBLE,
-    ID_MBC5_RUMBLE_RAM,
-    ID_MBC5_RUMBLE_RAM_BATTERY,
-    ID_POCKET_CAMERA,
-    ID_BANDAI_TAMA5,
-    ID_HUC3,
-    ID_HUC1_RAM_BATTERY
-};
 
-void set_memory_bank_controller(Cartridge* cartridge, CartridgeType* cartridge_type) {
+void cartridge_update_mbc(void) {
     assert(cartridge != NULL);
-    assert(cartridge_type != NULL);
 
-    switch(cartridge_type->id) {
-        case ID_ROM_ONLY:
-        case ID_ROM_RAM:
-        case ID_ROM_RAM_BATTERY:
-            cartridge->mbc = NONE;
-            
+    switch(cartridge->mbc) {
+        case NONE:
             break;
-        case ID_MBC1:
-        case ID_MBC1_RAM:
-        case ID_MBC1_RAM_BATTERY:
-            cartridge->mbc = MBC1;
+        case MBC1:
             cartridge->read = &mbc1_read;
             cartridge->write = &mbc1_write;
-            printf("cartridge set to MBC1\n");
             break; 
-        case ID_MBC2:
-        case ID_MBC2_BATTERY:
-            cartridge->mbc = MBC2;
+        case MBC2:
             cartridge->read = &mbc2_read;
             cartridge->write = &mbc2_write;
             break; 
-        case ID_MBC3_TIMER_BATTERY:
-        case ID_MBC3_TIMER_RAM_BATTERY:
-        case ID_MBC3:
-        case ID_MBC3_RAM:
-        case ID_MBC3_RAM_BATTERY:
-            cartridge->mbc = MBC3;
+        case MBC3:
             cartridge->read = &mbc3_read;
             cartridge->write = &mbc3_write;
-            //cartridge->read = &mbc1_read;
-            //cartridge->write = &mbc1_write;
-
-
             break;
-        case ID_MBC4:
-        case ID_MBC4_RAM:
-        case ID_MBC4_RAM_BATTERY:
-            cartridge->mbc = MBC4;
+        case MBC4:
             cartridge->read = &mbc4_read;
             cartridge->write = &mbc4_write;
             break;
-        case ID_MBC5:
-        case ID_MBC5_RAM:
-        case ID_MBC5_RAM_BATTERY:
-        case ID_MBC5_RUMBLE:
-        case ID_MBC5_RUMBLE_RAM:
-        case ID_MBC5_RUMBLE_RAM_BATTERY:
-            cartridge->mbc = MBC5;
+        case MBC5:
             cartridge->read = &mbc5_read;
             cartridge->write = &mbc5_write;
-            printf("cartridge set to MBC5\n");
             break; 
-        case ID_MMM01:
-        case ID_MMM01_RAM:
-        case ID_MMM01_RAM_BATTERY:
-        case ID_POCKET_CAMERA:
-        case ID_BANDAI_TAMA5:
-        case ID_HUC3:
-        case ID_HUC1_RAM_BATTERY:
         default:
-            cartridge->mbc = UNSUPPORTED;
+            fprintf(stderr, "Unsupported MBC\n");
+            assert(false);
             break;
     }
 }
@@ -118,35 +50,35 @@ void set_memory_bank_controller(Cartridge* cartridge, CartridgeType* cartridge_t
  
 
 CartridgeType cartridge_types[] = {
-    { 0x00, true,  "ROM ONLY", ID_ROM_ONLY},
-    { 0x01, false, "MBC1", ID_MBC1},
-    { 0x02, false, "MBC1+RAM", ID_MBC1_RAM}, 
-    { 0x03, false, "MBC1+RAM+BATTERY", ID_MBC1_RAM_BATTERY },
-    { 0x05, false, "MBC2", ID_MBC2 },
-    { 0x06, false, "MBC2+BATTERY", ID_MBC2_BATTERY },
-    { 0x08, false, "ROM+RAM", ID_ROM_RAM },
-    { 0x09, false, "ROM+RAM+BATTERY", ID_ROM_RAM_BATTERY },
-    { 0x0B, false, "MMM01", ID_MMM01 },
-    { 0x0C, false, "MMM01+RAM", ID_MMM01_RAM },
-    { 0x0D, false, "MMM01+RAM_BATTERY", ID_MMM01_RAM_BATTERY },
-    { 0x0F, false, "MBC3+TIMER+BATTERY", ID_MBC3_TIMER_BATTERY },
-    { 0x10, false, "MBC3+TIMER+RAM+BATTERY", ID_MBC3_TIMER_RAM_BATTERY },
-    { 0x11, false, "MBC3", ID_MBC3 },
-    { 0x12, false, "MBC3+RAM", ID_MBC3_RAM },
-    { 0x13, false, "MBC3+RAM+BATTERY", ID_MBC3_RAM_BATTERY },
-    { 0x15, false, "MBC4", ID_MBC4 },
-    { 0x16, false, "MBC4+RAM", ID_MBC4_RAM },
-    { 0x17, false, "MBC4+RAM+BATTERY", ID_MBC4_RAM_BATTERY },
-    { 0x19, false, "MBC5", ID_MBC5 },
-    { 0x1A, false, "MBC5+RAM", ID_MBC5_RAM },
-    { 0x1B, false, "MBC5+RAM+BATTERY", ID_MBC5_RAM_BATTERY },
-    { 0x1C, false, "MBC5+RUMBLE", ID_MBC5_RUMBLE },
-    { 0x1D, false, "MBC5+RUMBLE+RAM", ID_MBC5_RUMBLE_RAM },
-    { 0x1E, false, "MBC5+RUMBLE+RAM+BATTERY", ID_MBC5_RUMBLE_RAM_BATTERY },
-    { 0xFC, false, "POCKET CAMERA", ID_POCKET_CAMERA },
-    { 0xFD, false, "BANDAI TAMA5", ID_BANDAI_TAMA5 },
-    { 0xFE, false, "HUC3", ID_HUC3 },
-    { 0xFF, false, "HUC1+RAM+BATTERY", ID_HUC1_RAM_BATTERY }
+    { 0x00, NONE, "ROM ONLY", ID_ROM_ONLY},
+    { 0x01, MBC1, "MBC1", ID_MBC1},
+    { 0x02, MBC1, "MBC1+RAM", ID_MBC1_RAM}, 
+    { 0x03, MBC1, "MBC1+RAM+BATTERY", ID_MBC1_RAM_BATTERY },
+    { 0x05, MBC2, "MBC2", ID_MBC2 },
+    { 0x06, MBC2, "MBC2+BATTERY", ID_MBC2_BATTERY },
+    { 0x08, NONE, "ROM+RAM", ID_ROM_RAM },
+    { 0x09, NONE, "ROM+RAM+BATTERY", ID_ROM_RAM_BATTERY },
+    { 0x0B, UNSUPPORTED, "MMM01", ID_MMM01 },
+    { 0x0C, UNSUPPORTED, "MMM01+RAM", ID_MMM01_RAM },
+    { 0x0D, UNSUPPORTED, "MMM01+RAM_BATTERY", ID_MMM01_RAM_BATTERY },
+    { 0x0F, MBC3, "MBC3+TIMER+BATTERY", ID_MBC3_TIMER_BATTERY },
+    { 0x10, MBC3, "MBC3+TIMER+RAM+BATTERY", ID_MBC3_TIMER_RAM_BATTERY },
+    { 0x11, MBC3, "MBC3", ID_MBC3 },
+    { 0x12, MBC3, "MBC3+RAM", ID_MBC3_RAM },
+    { 0x13, MBC3, "MBC3+RAM+BATTERY", ID_MBC3_RAM_BATTERY },
+    { 0x15, MBC4, "MBC4", ID_MBC4 },
+    { 0x16, MBC4, "MBC4+RAM", ID_MBC4_RAM },
+    { 0x17, MBC4, "MBC4+RAM+BATTERY", ID_MBC4_RAM_BATTERY },
+    { 0x19, MBC5, "MBC5", ID_MBC5 },
+    { 0x1A, MBC5, "MBC5+RAM", ID_MBC5_RAM },
+    { 0x1B, MBC5, "MBC5+RAM+BATTERY", ID_MBC5_RAM_BATTERY },
+    { 0x1C, MBC5, "MBC5+RUMBLE", ID_MBC5_RUMBLE },
+    { 0x1D, MBC5, "MBC5+RUMBLE+RAM", ID_MBC5_RUMBLE_RAM },
+    { 0x1E, MBC5, "MBC5+RUMBLE+RAM+BATTERY", ID_MBC5_RUMBLE_RAM_BATTERY },
+    { 0xFC, UNSUPPORTED, "POCKET CAMERA", ID_POCKET_CAMERA },
+    { 0xFD, UNSUPPORTED, "BANDAI TAMA5", ID_BANDAI_TAMA5 },
+    { 0xFE, UNSUPPORTED, "HUC3", ID_HUC3 },
+    { 0xFF, UNSUPPORTED, "HUC1+RAM+BATTERY", ID_HUC1_RAM_BATTERY }
 };
 
 bool get_has_battery(CartridgeType* cartridge_type) {
@@ -168,8 +100,6 @@ bool get_has_battery(CartridgeType* cartridge_type) {
     }
     return false;
 }
-
-CartridgeType* cartridge_type = NULL;
 
 CartridgeType* get_cartridge_type(int header_value) {
     for(int i = 0; i < (sizeof(cartridge_types) / sizeof(CartridgeType)); ++i) {
@@ -237,18 +167,17 @@ int initialize_cartridge(const char* cartridge_filepath) {
     }
 
     /* TYPE */
-    
-    cartridge_type = get_cartridge_type(cartridge->rom[0x0147]);
+    CartridgeType* cartridge_type = get_cartridge_type(cartridge->rom[0x0147]);
     //TODO handle errors
     assert(cartridge_type != NULL);
+    cartridge->id = cartridge_type->id;
+    memcpy(cartridge->name, cartridge_type->name, 32);
+    cartridge->mbc = cartridge_type->mbc;
+
     printf("cartridge type: %s\n", cartridge_type->name);
 
 
-    set_memory_bank_controller(cartridge, cartridge_type);
-    if(cartridge->mbc == UNSUPPORTED) {
-        printf("This memory bank controller is not supported\n");
-        return 1;
-    }
+    cartridge_update_mbc();
 
     cartridge->has_battery = get_has_battery(cartridge_type);
 
@@ -260,11 +189,6 @@ int initialize_cartridge(const char* cartridge_filepath) {
 
     //TODO actually verify...
     verify_cartridge();
-
-
-    //TODO this is only temporary
-    int save_state_size = get_save_state_size();
-    printf("Save State size: %i B\n", save_state_size);
 
     return 0;
 }
@@ -291,13 +215,13 @@ static int get_cartridge_rom_size(int header_value) {
 }
 
 
-void cartridge_update_selected_rom() {
+void cartridge_update_selected_rom(void) {
 
     cartridge->selected_rom = 
         &cartridge->rom[cartridge->selected_rom_bank * 0x4000]; 
      
 }
-void cartridge_update_selected_ram() {
+void cartridge_update_selected_ram(void) {
 
     cartridge->selected_ram = 
         &cartridge->ram[cartridge->selected_ram_bank * 0x2000];

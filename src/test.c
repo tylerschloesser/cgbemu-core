@@ -28,60 +28,12 @@ bool save_state_called = false;
 bool load_state_called = false;
 
 void save_state_callback() {
-
-    uint8_t* state = NULL;
-    int size = 0;
-
-    cgbemu_save_state(&state, &size);
-
-    assert(size > 0);
-    assert(state != NULL);
-
-    FILE* file = fopen("save_state.bin", "wb");
-    int bytes_written = 0;
-    while(bytes_written < size)
-        bytes_written += fwrite((state + bytes_written), 1, (size - bytes_written), file); 
-       
-    if(bytes_written == 0) {
-        perror("fwrite() failed\n");
-        return;
-    }
-
-    fclose(file);
-
-    free(state);
+    cgbemu_save_state("save_state.bin");
 }
 
 void load_state_callback() {
- 
-    FILE *file = fopen("save_state.bin", "rb");
-
-    if(!file) {
-        perror("fopen() failed");
-        return;
-    }
-    
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    rewind(file);
-    
-    uint8_t* state = malloc(size);
-    
-    int bytes_read;
-    if((bytes_read = fread(state, sizeof(*state), size, file)) == 0) {
-        perror("fread() failed");
-        fclose(file);
-        return;
-    }
-    
-    fclose(file);
-
-    cgbemu_load_state(state, size);
-
-    free(state);
+    cgbemu_load_state("save_state.bin");
 }
-
-     
 
 void idle(void)
 {
@@ -172,6 +124,12 @@ void processKeyboard(int key, bool down)
             break;
         case 'x':
             cgbemu_set_button_pressed(A, down);
+            break;
+        case 13: // Enter key
+            cgbemu_set_button_pressed(START, down);
+            break;
+        case ' ':
+            cgbemu_set_button_pressed(SELECT, down);
             break;
         case 'q':
             exit(EXIT_SUCCESS);

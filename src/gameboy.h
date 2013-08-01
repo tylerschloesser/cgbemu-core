@@ -17,33 +17,31 @@
 #define GAMEBOY_HW_REGISTERS_SIZE 0x80
 
 
-int initialize_gameboy(const char* bios_filepath);
+int initialize_gameboy(bool use_bios, const char* bios_filepath);
 
 void gameboy_disable_bios(void);
 
-void gameboy_save_state( char* save_state_filepath );
-void gameboy_load_state( char* save_state_filepath );
+int gameboy_save_state(const char* filepath);
+int gameboy_load_state(const char* filepath);
 
-void gameboy_toggle_speed();
-
-void gameboy_update_selected_ram();
-void gameboy_update_selected_vram();
+void gameboy_update_selected_ram(void);
+void gameboy_update_selected_vram(void);
 
 
 typedef struct {
-    uint8_t* ram;
-    uint8_t* vram;
-    uint8_t* oam;
-    uint8_t* bios;
+    uint8_t ram[GAMEBOY_RAM_SIZE];
+    uint8_t vram[GAMEBOY_VRAM_SIZE];
+    uint8_t oam[GAMEBOY_OAM_SIZE];
+    uint8_t bios[GAMEBOY_BIOS_SIZE];
     
     uint8_t* selected_vram;
-    uint8_t* selected_ram;
+    uint8_t*  selected_ram;
 
-    uint8_t* bg_pallete; // Background pallete
-    uint8_t* ob_pallete; // Object (sprite) pallete
+    uint8_t bg_pallete[GAMEBOY_BG_PALLETE_SIZE]; // Background pallete
+    uint8_t ob_pallete[GAMEBOY_OB_PALLETE_SIZE]; // Object (sprite) pallete
 
-    uint8_t* hram;
-    uint8_t* hw_registers; // Hardware registers (I/O ports)
+    uint8_t hram[GAMEBOY_HRAM_SIZE];
+    uint8_t hw_registers[GAMEBOY_HW_REGISTERS_SIZE]; // Hardware registers (I/O ports)
     
     u8 ie_register; // Interrupt enable register
     u8 ime_flag; // Interrupt master enable flag
@@ -54,9 +52,6 @@ typedef struct {
 } GameboyColor;
 
 extern GameboyColor* gb;
-
-//TODO
-int get_save_state_size();
 
 enum hw_register {
     P1      = 0x00, //read joypad info

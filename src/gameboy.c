@@ -90,7 +90,7 @@ static int read_bios(const char* filepath) {
 /**
  * If bios_filepath is null, don't use the bios
  */
-int initialize_gameboy(const char* bios_filepath)
+int initialize_gameboy(bool use_bios, const char* bios_filepath)
 {
     fprintf(stderr, "initialize_gameboy(bios_filepath=%s\n", bios_filepath);
     assert(gameboy_initialized == false);
@@ -98,27 +98,14 @@ int initialize_gameboy(const char* bios_filepath)
     gb = (GameboyColor*)calloc(sizeof(GameboyColor), 1);
 
     assert(gb);
-    if(!gb) return 1;
+    if(gb == NULL) {
+        return 1;
+    }
 
-    gb->hw_registers = hw_registers;
+    if(use_bios == false) {
+        memcpy(gb->hw_registers, hw_registers, GAMEBOY_HW_REGISTERS_SIZE);
+    }
 
-    uint8_t* buffer = calloc(
-              GAMEBOY_RAM_SIZE 
-            + GAMEBOY_VRAM_SIZE 
-            + GAMEBOY_OAM_SIZE 
-            + GAMEBOY_BIOS_SIZE 
-            + GAMEBOY_BG_PALLETE_SIZE 
-            + GAMEBOY_OB_PALLETE_SIZE 
-            + GAMEBOY_HRAM_SIZE, 1);
-
-    gb->ram = buffer;
-    gb->vram = (buffer += GAMEBOY_RAM_SIZE);
-    gb->oam = (buffer += GAMEBOY_VRAM_SIZE);
-    gb->bios = (buffer += GAMEBOY_OAM_SIZE);
-    gb->bg_pallete = (buffer += GAMEBOY_BIOS_SIZE);
-    gb->ob_pallete = (buffer += GAMEBOY_BG_PALLETE_SIZE);
-    gb->hram = (buffer += GAMEBOY_HRAM_SIZE);
-    
     if(bios_filepath) {
         if(read_bios(bios_filepath) != 0) {
             return 1;
@@ -142,132 +129,101 @@ int initialize_gameboy(const char* bios_filepath)
 /**
  * TODO is selected ram bank 0 allowed?
  */
-void gameboy_update_selected_ram()
+void gameboy_update_selected_ram(void)
 {
     u32 ram_bank = gb->hw_registers[SVBK];
     gb->selected_ram = &gb->ram[ram_bank * 0x1000];
 }
 
-void gameboy_update_selected_vram()
+void gameboy_update_selected_vram(void)
 {
     u32 vram_bank = gb->hw_registers[VBK];
     gb->selected_vram = &gb->vram[vram_bank * 0x2000];
 }
 
-int get_save_state_size() {
-    // calculate memory required 
-    int save_state_size = 0;
+static int get_save_state_size() {
+    return(sizeof(Cpu) + sizeof(Cartridge) + cartridge->ram_size + sizeof(GameboyColor));
+}
+
+int gameboy_save_state(const char* filepath) {
+
+    assert(filepath);
+
+    if(filepath == NULL) {
+        fprintf(stderr, "No filepath specified\n");
+        return 1;
+    }
+
+    FILE* file = fopen(filepath, "wb");
+    if(file == NULL) {
+        perror("fopen() failed");
+        return 1;
+    }
     
-    save_state_size += sizeof(Cpu);
-    /*
-    save_state_size += cartridge_ram_size;
-    save_state_size += cartridge_rom_size; //include ROM because
-    */
-    save_state_size += cartridge->ram_size;
-    save_state_size += cartridge->rom_size; //include ROM because
+    fwrite((uint8_t*)cpu, 1, sizeof(Cpu), file);
 
-    save_state_size += (0x40 + 0x40); //pallete and sprite pallete
-    save_state_size += GAMEBOY_RAM_SIZE;
-    save_state_size += GAMEBOY_VRAM_SIZE;
-    save_state_size += GAMEBOY_OAM_SIZE;
-    save_state_size += GAMEBOY_BIOS_SIZE;
-    save_state_size += 0x7F; //zero page
-    save_state_size += 1; //interrupt enabled
-    save_state_size += 0x80; //hardware registers
-    save_state_size += 1; //ime 
-    save_state_size += 4; //mbc_control
+    fwrite((uint8_t*)cartridge, 1, sizeof(Cartridge), file);
+    fwrite(cartridge->ram, 1, cartridge->ram_size, file);
 
-    return save_state_size;
+    fwrite((uint8_t*)gb, 1, sizeof(GameboyColor), file);
+
+    fclose(file);
+
+    fprintf(stderr, "State saved!\n");
+
+    return 0;
 }
 
-/**
- * memcpy increment destination
- */
-void memcpy_id(uint8_t** dest_p, uint8_t* src, int size) {
-    uint8_t* dest = (*dest_p);
-    memcpy(dest, src, size);
-    (*dest_p) += size;
-}
 
-/**
- * memcpy increment source
- */
-void memcpy_is(uint8_t* dest, uint8_t** src_p, int size) {
-    uint8_t* src = *src_p;
-    memcpy(dest, src, size);
-    (*src_p) += size;
-}
 
-void save_state(uint8_t** buffer) {
+int gameboy_load_state(const char* filepath) {
+    assert(filepath);
+
+    if(filepath == NULL) {
+        fprintf(stderr, "No filepath specified\n");
+        return 1;
+    }
+
+    FILE* file = fopen(filepath, "rb");
+    if(file == NULL) {
+        perror("fopen() failed");
+        return 1;
+    }
+
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    rewind(file);
+
+    int expected_size = get_save_state_size();
+
+    // Checks to see that the save state is the proper size
+    if(size != expected_size) {
+        fprintf(stderr, "Invalid save state\n");
+        fclose(file);
+        return 1;
+    }
+
+    fread((uint8_t*)cpu, 1, sizeof(Cpu), file);
+
+    // Save the ram/rom pointers since their about to be overwritten
+    uint8_t* cartridge_ram = cartridge->ram;
+    uint8_t* cartridge_rom = cartridge->rom;
+
+    fread((uint8_t*)cartridge, 1, sizeof(Cartridge), file);
+    cartridge->ram = cartridge_ram;
+    cartridge->rom = cartridge_rom;
     
-    int save_state_size = get_save_state_size();
-
-    assert(save_state_size > 0);
-
-    (*buffer) = (uint8_t*)malloc(save_state_size);
-    uint8_t* buffer_original = (*buffer);    
-
-    memcpy_id(buffer, (uint8_t*)cpu, sizeof(Cpu));
-    /*
-    memcpy_id(buffer, cartridge_ram, cartridge_ram_size);
-    memcpy_id(buffer, cartridge_rom, cartridge_rom_size);
-    */
-
-    memcpy_id(buffer, cartridge->ram, cartridge->ram_size);
-    memcpy_id(buffer, cartridge->rom, cartridge->rom_size);
-
-    memcpy_id(buffer, gb->bg_pallete, GAMEBOY_BG_PALLETE_SIZE);
-    memcpy_id(buffer, gb->ob_pallete, GAMEBOY_OB_PALLETE_SIZE);
-    memcpy_id(buffer, gb->ram, GAMEBOY_RAM_SIZE);
-    memcpy_id(buffer, gb->vram, GAMEBOY_VRAM_SIZE);
-    memcpy_id(buffer, gb->oam, GAMEBOY_OAM_SIZE);
-    memcpy_id(buffer, gb->bios, GAMEBOY_BIOS_SIZE);
-    memcpy_id(buffer, gb->hram, GAMEBOY_HRAM_SIZE);
-    memcpy_id(buffer, &(gb->ie_register), 1);
-    memcpy_id(buffer, gb->hw_registers, 0x80);
-    memcpy_id(buffer, &(gb->ime_flag), 1);
-
-    //TODO THIS NEEDS TO BE FIXED
-    /*
-    memcpy_id(buffer, mbc_control, 4);
-    */
-
-    /* reset the buffer pointer */
-    (*buffer) = buffer_original;
-}
-
-void load_state(uint8_t* buffer, int size) {
-    
-    assert(buffer != NULL);
-    assert(size > 0);
-    assert(size == get_save_state_size());
-
-    memcpy_is((uint8_t*)cpu, &buffer, sizeof(Cpu));
-    /*
-    memcpy_is(cartridge_ram, &buffer, cartridge_ram_size);
-    memcpy_is(cartridge_rom, &buffer, cartridge_rom_size);
-    */
-
-    memcpy_is(cartridge->ram, &buffer, cartridge->ram_size);
-    memcpy_is(cartridge->rom, &buffer, cartridge->rom_size);
-
-    memcpy_is(gb->bg_pallete, &buffer, 0x40);
-    memcpy_is(gb->ob_pallete, &buffer, 0x40);
-    memcpy_is(gb->ram, &buffer, GAMEBOY_RAM_SIZE);
-    memcpy_is(gb->vram, &buffer, GAMEBOY_VRAM_SIZE);
-    memcpy_is(gb->oam, &buffer, GAMEBOY_OAM_SIZE);
-    memcpy_is(gb->bios, &buffer, GAMEBOY_BIOS_SIZE);
-    memcpy_is(gb->hram, &buffer, 0x7F);
-    memcpy_is(&(gb->ie_register), &buffer, 1);
-    memcpy_is(gb->hw_registers, &buffer, 0x80);
-    memcpy_is(&(gb->ime_flag), &buffer, 1);
-    /*
-    memcpy_is(mbc_control, &buffer, 4);
-    */
- 
+    fread(cartridge->ram, 1, cartridge->ram_size, file);
+    cartridge_update_mbc();
     cartridge_update_selected_rom();
     cartridge_update_selected_ram();
+
+    fread((uint8_t*)gb, 1, sizeof(GameboyColor), file);
     gameboy_update_selected_ram();
     gameboy_update_selected_vram();
+
+    fprintf(stderr, "State loaded!\n");
+
+    return 0;
 }
 
