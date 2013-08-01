@@ -2,9 +2,7 @@
 #include "cpu.h"
 #include "joypad.h"
 #include "memory.h"
-
 #include "cartridge.h"
-
 #include "screen.h"
 
 static bool gameboy_initialized = false;
@@ -106,17 +104,16 @@ int initialize_gameboy(bool use_bios, const char* bios_filepath)
         memcpy(gb->hw_registers, hw_registers, GAMEBOY_HW_REGISTERS_SIZE);
     }
 
-    if(bios_filepath) {
+    if(use_bios) {
         if(read_bios(bios_filepath) != 0) {
             return 1;
         }
-        gb->use_bios = true;
         gb->hw_registers[BLCK] = 0x00;
         enable_bios();
     } else {
-        gb->use_bios = false;
         gb->hw_registers[BLCK] = 0x11;
     }
+    gb->use_bios = use_bios;
 
     gameboy_update_selected_ram();
     gameboy_update_selected_vram();

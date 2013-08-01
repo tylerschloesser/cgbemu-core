@@ -6,8 +6,7 @@
 
 #define GAMEBOY_RAM_SIZE 0x8000
 #define GAMEBOY_VRAM_SIZE 0x4000
-/* TODO this is nNOT the correct OAM size */
-#define GAMEBOY_OAM_SIZE 0x20000  //128KB
+#define GAMEBOY_OAM_SIZE 0xA0
 #define GAMEBOY_BIOS_SIZE 0x900
 
 #define GAMEBOY_BG_PALLETE_SIZE 0x40
@@ -43,12 +42,11 @@ typedef struct {
     uint8_t hram[GAMEBOY_HRAM_SIZE];
     uint8_t hw_registers[GAMEBOY_HW_REGISTERS_SIZE]; // Hardware registers (I/O ports)
     
-    u8 ie_register; // Interrupt enable register
-    u8 ime_flag; // Interrupt master enable flag
+    uint8_t ie_register; // Interrupt enable register
+    uint8_t ime_flag; // Interrupt master enable flag
 
     bool cgb_mode;
     bool use_bios;
-    
 } GameboyColor;
 
 extern GameboyColor* gb;
@@ -121,6 +119,5 @@ enum hw_register {
     SVBK    = 0x70, //ram bank select
     IE      = 0xFF  //interrupt enable
 };
-
 
 #endif // GAMEBOY_H_
