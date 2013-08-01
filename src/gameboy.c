@@ -158,7 +158,7 @@ int get_save_state_size() {
     // calculate memory required 
     int save_state_size = 0;
     
-    save_state_size += sizeof(CpuState);
+    save_state_size += sizeof(Cpu);
     /*
     save_state_size += cartridge_ram_size;
     save_state_size += cartridge_rom_size; //include ROM because
@@ -207,10 +207,7 @@ void save_state(uint8_t** buffer) {
     (*buffer) = (uint8_t*)malloc(save_state_size);
     uint8_t* buffer_original = (*buffer);    
 
-    CpuState state = get_cpu_state();
-    u8* state_raw = (u8*)&state;
-
-    memcpy_id(buffer, state_raw, sizeof(CpuState));
+    memcpy_id(buffer, (uint8_t*)cpu, sizeof(Cpu));
     /*
     memcpy_id(buffer, cartridge_ram, cartridge_ram_size);
     memcpy_id(buffer, cartridge_rom, cartridge_rom_size);
@@ -245,10 +242,7 @@ void load_state(uint8_t* buffer, int size) {
     assert(size > 0);
     assert(size == get_save_state_size());
 
-    CpuState state;
-    uint8_t* state_raw = (uint8_t*)&state;
-    
-    memcpy_is(state_raw, &buffer, sizeof(CpuState));
+    memcpy_is((uint8_t*)cpu, &buffer, sizeof(Cpu));
     /*
     memcpy_is(cartridge_ram, &buffer, cartridge_ram_size);
     memcpy_is(cartridge_rom, &buffer, cartridge_rom_size);
@@ -271,8 +265,6 @@ void load_state(uint8_t* buffer, int size) {
     memcpy_is(mbc_control, &buffer, 4);
     */
  
-    set_cpu_state(state);
-
     cartridge_update_selected_rom();
     cartridge_update_selected_ram();
     gameboy_update_selected_ram();

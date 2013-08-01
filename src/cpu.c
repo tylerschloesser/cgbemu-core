@@ -11,20 +11,20 @@
 #define CF 0x10
 
 /* TEMPORARY so we can use existing variables names */
-#define waiting_for_interrupt   cpu_state.waiting_for_interrupt
-#define timer_counter           cpu_state.timer_counter
-//#define cpu_running           cpu_state.running
-#define scanline_counter        cpu_state.scanline_counter
-#define cycles                  cpu_state.cycles
-#define mode_cycles             cpu_state.mode_cycles
-#define divider_counter         cpu_state.divider_counter
-#define PC                      cpu_state.PC
-#define SP                      cpu_state.SP
-#define BC                      cpu_state.BC
-#define DE                      cpu_state.DE
-#define HL                      cpu_state.HL
-#define AF                      cpu_state.AF
-#define IR                      cpu_state.IR
+#define waiting_for_interrupt   cpu->waiting_for_interrupt
+#define timer_counter           cpu->timer_counter
+//#define cpu_running           cpu->running
+#define scanline_counter        cpu->scanline_counter
+#define cycles                  cpu->cycles
+#define mode_cycles             cpu->mode_cycles
+#define divider_counter         cpu->divider_counter
+#define PC                      cpu->PC
+#define SP                      cpu->SP
+#define BC                      cpu->BC
+#define DE                      cpu->DE
+#define HL                      cpu->HL
+#define AF                      cpu->AF
+#define IR                      cpu->IR
 
 // 8 bit register definitions
 #define REG_B BC.B.H
@@ -76,7 +76,8 @@ typedef enum {
     JOYPAD,
 } InterruptType;
 
-CpuState cpu_state;
+Cpu* cpu = NULL;
+
 static bool cpu_initialized = false;
 
 u16 DAA_table[] = {
@@ -355,6 +356,9 @@ static bool emulating = false;
 void initialize_cpu(bool use_bios)
 {
     assert( cpu_initialized == false );
+
+    cpu = (Cpu*)malloc(sizeof(Cpu));
+    assert(cpu);
 
     if(use_bios) {
         PC.W = 0;
@@ -698,21 +702,5 @@ static int execute() {
     // program will not reach this point
     assert( false );
     return -1;
-}
-
-void cpu_set_timer_countr( int timer_countr )
-{
-    timer_counter = timer_countr;
-}
-
-CpuState get_cpu_state()
-{
-    CpuState current_cpu_state = cpu_state;
-    return current_cpu_state;
-}
-
-void set_cpu_state( CpuState new_cpu_state )
-{
-    cpu_state = new_cpu_state;
 }
 

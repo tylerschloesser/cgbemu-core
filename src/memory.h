@@ -2,18 +2,14 @@
 #define MEMORY_H_INCLUDED
 
 #include "globals.h"
-#include "debug.h"
 #include "gameboy.h"
-//temp
+#include "cartridge.h"
 #include "cpu.h"
 
 uint8_t memory_read(uint16_t);
 void memory_write(uint16_t, uint8_t);
 
 void hdma_transfer(void);
-
-void save_state(uint8_t** buffer);
-void load_state(uint8_t* buffer, int size);
 
 void mbc0_write(uint16_t location, uint8_t data);
 uint8_t mbc0_read(uint16_t location);

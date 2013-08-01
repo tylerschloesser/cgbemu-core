@@ -23,9 +23,17 @@ uint8_t scanline_bg_priority[160];
 TODO handle regular gb sprite priority */
 uint8_t scanline_obj_priority[160];
 
+static bool lcd_enabled;
+static bool window_enabled;
+static bool bg_enabled;
+static bool obj_enabled;
+static uint16_t tile_data;
+static uint16_t window_tile_map;
+static uint16_t bg_tile_map;
 
 
 uint16_t screen_buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+
 uint16_t* get_screen_buffer(void) {
     return (uint16_t*)screen_buffer;
 }
@@ -33,12 +41,8 @@ uint16_t* get_screen_buffer(void) {
 static bool screen_initialized = false;
 
 void initialize_screen() {
-    
     assert( screen_initialized == false );
-
-    fprintf( stdout, "initializing screen\n" );
     memset(screen_buffer, 0, (SCREEN_HEIGHT * SCREEN_WIDTH) * sizeof(uint16_t));
-    
     screen_initialized = true;
 }
 
@@ -60,14 +64,6 @@ void update_screen_buffer( int y_pixel, int x_pixel, u16 pallete_entry )
     uint16_t rgb_565 = b | (g << 6) | (r << 11);
     screen_buffer[y_pixel][x_pixel] = rgb_565;
 }
-
-bool lcd_enabled;
-bool window_enabled;
-bool bg_enabled;
-bool obj_enabled;
-uint16_t tile_data;
-uint16_t window_tile_map;
-uint16_t bg_tile_map;
 
 /* this is what it's already called ... */
 uint16_t tile_data_offset;
@@ -347,12 +343,10 @@ int render_sprites() {
                     continue;
                 }
                 
-                
                 pallete_entry = gb->ob_pallete[pallete_index + pallete_index_offset];
                 pallete_entry |= (gb->ob_pallete[pallete_index + pallete_index_offset + 1] << 8);
 
                 int x_pixel = x_position + sprite_pixel;
-                
                 
                 /* don't remove this you idiot! */
                 if(scanline < 0 || scanline > 143 || x_pixel < 0 || x_pixel > 159) {

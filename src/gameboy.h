@@ -39,14 +39,14 @@ typedef struct {
     uint8_t* selected_vram;
     uint8_t* selected_ram;
 
-    uint8_t* bg_pallete; /* background pallete */
-    uint8_t* ob_pallete; /* object (sprite) pallete */
+    uint8_t* bg_pallete; // Background pallete
+    uint8_t* ob_pallete; // Object (sprite) pallete
 
     uint8_t* hram;
-    uint8_t* hw_registers; /* hardware registers (I/O ports) */
+    uint8_t* hw_registers; // Hardware registers (I/O ports)
     
-    u8 ie_register; /* interrupt enable register */
-    u8 ime_flag; /* interrupt master enable flag */
+    u8 ie_register; // Interrupt enable register
+    u8 ime_flag; // Interrupt master enable flag
 
     bool cgb_mode;
     bool use_bios;
@@ -57,12 +57,6 @@ extern GameboyColor* gb;
 
 //TODO
 int get_save_state_size();
-
-typedef enum {
-    CGB, /* gameboy color */
-    MGB, /* gameboy pocket */
-    DMG, /* gameboy */
-} GameboyModel;
 
 enum hw_register {
     P1      = 0x00, //read joypad info

@@ -58,14 +58,6 @@ void joypad_down(int gb_key) {
     assert( initialized );
     assert( gb_key < 8 );
     
-    /*
-    u8 bit = 1 << gb_key;
-    if( joypad_state ^ bit == 0 ) {
-        fprintf(stderr,"alreadypressed\n");
-        return;
-    }
-    */
-    
     joypad_state &= ~(1 << gb_key);
     
     gb->hw_registers[P1] |= (get_joypad_state() & 0x0F);

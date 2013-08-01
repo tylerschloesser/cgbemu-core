@@ -7,47 +7,9 @@
 #include "screen.h"
 
 
-#define INVALID_WRITE( location )                                                           \
-            /*fprintf( stderr, "attempted to write to invalid location: %04X\n", location );*/  \
-            return
-            
-#define INVALID_READ( location )                                                            \
-            /*fprintf( stderr, "attempted to read from invalid location: %04X\n", location );*/     \
-            return 0
-            
-int get_checksum(uint8_t* buffer, int size) {
-    int sum = 0;
-    for(int i = 0; i < size; ++i) {
-        sum += buffer[i];
-    }
-    return sum;
-}
-
-void dump(char* filename, uint8_t* buffer, int size) {
-    FILE* file = fopen(filename, "w");
-    if(!file) return;
-    fwrite(buffer, 1, size, file);
-    fclose(file);
-}
-
-
-void print_after_bios() {
-    int c = get_checksum(gb->hw_registers, GAMEBOY_HW_REGISTERS_SIZE);
-    printf("hr_registers checkum: %X\n", c);
-
-    dump("hw_registers.bin", gb->hw_registers, GAMEBOY_HW_REGISTERS_SIZE);
-
-/*        
-    c = get_checksum(gb->hram, GAMEBOY_HRAM_SIZE);
-    printf("hram checkum: %X\n\n", c);
-
-    c = get_checksum(gb->ram, GAMEBOY_RAM_SIZE);
-    printf("ram checkum: %X\n\n", c);
-
-    */
-    print_cpu_state();
-}
-
+#define INVALID_WRITE(location) return
+#define INVALID_READ(location) return 0
+    
 void hdma_transfer(void)
 {
     assert(cartridge);
@@ -400,10 +362,6 @@ uint8_t mbc5_read(uint16_t location) {
 void memory_write(uint16_t location, uint8_t data)
 {
     if(location < 0xE000) {
-        if(location == 0x83c0) {
-            //printf("wrote %X to %X\n", data, location);
-            //cpu_step = true;       
-        }
         cartridge->write(location, data);
         return;
     }
@@ -412,7 +370,7 @@ void memory_write(uint16_t location, uint8_t data)
         if(location < 0xFE00) 
         {
             /* E000-FDFF echo RAM (not usable) */
-            INVALID_WRITE( location );  
+            INVALID_WRITE(location);  
         } 
         else if(location < 0xFEA0) 
         {
@@ -547,7 +505,7 @@ void memory_write(uint16_t location, uint8_t data)
                                 break;
                         }
                         if( timer_counter != 0 ) {
-                            cpu_set_timer_countr( timer_counter );
+                            cpu->timer_counter = timer_counter;
                         }
                     }
                     break;
@@ -666,26 +624,24 @@ uint8_t memory_read(uint16_t location) {
             }
             return gb->hw_registers[location - offset];
         } 
-        else if(location < 0xFFFF) 
-        {
-            /* FF80-FFFE zero page */
-            int offset = 0xFF80;
-            return gb->hram[location - offset];
-        } 
-        else if (location == 0xFFFF) 
-        {
-            /* FFFF interrupt enable */
+        else if(location < 0xFFFF) {
+            // FF80-FFFE zero page
+            return gb->hram[location - 0xFF80];
+
+        } else if (location == 0xFFFF) {
+            // FFFF interrupt enable
             return gb->ie_register; 
-        } 
-        else 
-        {
-            /* not possible */
+
+        } else {
+            // Not possible
+            assert(false);
         }
     } 
     else 
     {
-        INVALID_READ( location );
+        INVALID_READ(location);
     }
+    assert(false);
     return 0;
 }
 

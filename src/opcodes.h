@@ -28,8 +28,6 @@ case 0x07: //RLCA
     REG_A = (REG_F & CF) ? ((REG_A << 1) | 1) : (REG_A << 1);
     CLOCK_CYCLES(4);
 case 0x08: //LD (a16), SP
-    // TR.W = READ(PC.W++);
-    // TR.W |= (READ(PC.W++) << 8);
     TR.LO = READ(PC.W++);
     TR.HI = READ(PC.W++);
     WRITE(TR.W++, SP.LO);
@@ -48,12 +46,10 @@ case 0x0B: //DEC BC
     CLOCK_CYCLES(8);
 case 0x0C: //INC C
     REG_C++;
-    //REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF); 5/15/2012
     REG_F = (REG_C ? 0 : ZF) | ((REG_C & 0xF) ? 0 : HF) | (REG_F & CF);
     CLOCK_CYCLES(4);
 case 0x0D: //DEC C
     REG_C--;
-    //REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0); 5/15/2012
     REG_F = (REG_C ? 0 : ZF) | NF | ((REG_C & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
     CLOCK_CYCLES(4);
 case 0x0E: //LD C, d8
@@ -353,7 +349,6 @@ case 0x8A: ADC_BYTES(REG_A, REG_D); CLOCK_CYCLES(4);
 case 0x8B: ADC_BYTES(REG_A, REG_E); CLOCK_CYCLES(4);
 case 0x8C: ADC_BYTES(REG_A, REG_H); CLOCK_CYCLES(4);
 case 0x8D: ADC_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
-//case 0x8E: TR.HI = READ(HL.W); ADC_BYTES(REG_A, TR.HI); CLOCK_CYCLES(8);
 case 0x8E: temp = READ(HL.W); ADC_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0x8F: ADC_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
     
@@ -363,7 +358,6 @@ case 0x92: SUB_BYTES(REG_A, REG_D); CLOCK_CYCLES(4);
 case 0x93: SUB_BYTES(REG_A, REG_E); CLOCK_CYCLES(4);
 case 0x94: SUB_BYTES(REG_A, REG_H); CLOCK_CYCLES(4);
 case 0x95: SUB_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
-//case 0x96: TR.HI = READ(HL.W); SUB_BYTES(REG_A, TR.HI); CLOCK_CYCLES(8);
 case 0x96: temp = READ(HL.W); SUB_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0x97: SUB_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
 
@@ -410,7 +404,6 @@ case 0xBB: CP_BYTES(REG_A, REG_E); CLOCK_CYCLES(4);
 case 0xBC: CP_BYTES(REG_A, REG_H); CLOCK_CYCLES(4);
 case 0xBD: CP_BYTES(REG_A, REG_L); CLOCK_CYCLES(4);
 
-//case 0xBE: TR.HI = READ(HL.W); CP_BYTES(REG_A, TR.HI); CLOCK_CYCLES(8);
 case 0xBE: temp = READ(HL.W); CP_BYTES(REG_A, temp); CLOCK_CYCLES(8);
 case 0xBF: CP_BYTES(REG_A, REG_A); CLOCK_CYCLES(4);
     
@@ -800,16 +793,6 @@ case 0xCD: //CALL a16v
 {
     TR.LO = READ(PC.W++);
     TR.HI = READ(PC.W++);
-        
-    /*
-    //TEMPTEMPTEMP
-    if(TR.W == 0x0211) { //wait for vblank 
-        printf("Wait for VBLANK called.\n");
-        //DISPLAY_OPCODES = true;
-        //getchar();
-    }
-    */
-    
     WRITE(--SP.W, PC.HI);
     WRITE(--SP.W, PC.LO);
     PC.W = TR.W;
@@ -817,7 +800,6 @@ case 0xCD: //CALL a16v
 }
 case 0xCE: //ADC A, d8
 {
-    //TR.HI = READ(PC.W++) + ((REG_F & CF) >> 4);
     u8 R1 = REG_A;
     u8 R2 = READ(PC.W++);
     
@@ -829,14 +811,6 @@ case 0xCE: //ADC A, d8
 
     REG_A = R1;
     CLOCK_CYCLES(8); 
-
-    /* 
-    TR.HI = READ(PC.W++) + ((REG_F & CF) ? 1 : 0);
-    TR.LO = REG_A + TR.HI;
-    REG_F = (TR.LO ? 0 : ZF) | (((REG_A ^ TR.HI ^ TR.LO) & 0x10) ? HF : 0) | (TR.LO < TR.HI ? CF : 0);
-    REG_A = TR.LO;
-    CLOCK_CYCLES(8);
-    */
 }
 case 0xCF: //RST 08H
     WRITE(--SP.W, PC.HI);
@@ -945,11 +919,6 @@ case 0xDE: //SBC A, d8
     R1=TR.LO;
 
     REG_A = R1;
-    /*
-    TR.HI = READ(PC.W++) - ((REG_F & CF) >> 4);
-    REG_F = ((REG_A == TR.HI) ? ZF : 0) | NF | (((REG_A & 0xF) < (TR.HI & 0xF)) ? HF : 0) | ((REG_A < TR.HI) ? CF : 0);
-    REG_A -= TR.HI;
-    */
     CLOCK_CYCLES(8);
 }
 case 0xDF: //RST 18H
@@ -959,11 +928,6 @@ case 0xDF: //RST 18H
     PC.LO = 0x18;
     CLOCK_CYCLES(16);
 case 0xE0: //LDH (a8), A
-    /*
-    TR.HI = 0xFF;
-    TR.LO = READ(PC.W++);
-    WRITE(TR.W, REG_A);
-    */
     WRITE(0xFF00+READ(PC.W++), REG_A);
     CLOCK_CYCLES(12);
 case 0xE1: //POP HL
@@ -971,11 +935,6 @@ case 0xE1: //POP HL
     REG_H = READ(SP.W++);
     CLOCK_CYCLES(12);
 case 0xE2: //LD (C), A
-    /*
-    TR.HI = 0xFF;
-    TR.LO = REG_C;
-    WRITE(TR.W, REG_A);
-    */
     WRITE(0xFF00+REG_C, REG_A);
     CLOCK_CYCLES(8);
 case 0xE3:
@@ -1016,21 +975,6 @@ case 0xE8: //ADD SP, r8
     }
 
     SP.W = local_SP;
-
-
-    /* 
-    offset = (s8)READ(PC.W++);
-    printf("SP=%d (%X) offset=%i", SP.W, SP.W, offset);
-    TR.W = ((int)SP.W + offset);
-    printf(" TR.W=%d (%X)\n", TR.W, TR.W);
-    u8 wat = 
-    if(offset >= 0) {
-        REG_F = (((SP.W ^ offset ^ TR.W) & 0x1000) ? HF : 0) | (SP.W > TR.W ? CF : 0);
-    } else {
-        REG_F = (((SP.W ^ offset ^ TR.W) & 0x1000) ? HF : 0) | (SP.W < TR.W ? CF : 0);
-    }   
-    SP.W = TR.W;
-    */
     CLOCK_CYCLES(16);
 }
 case 0xE9: //JP (HL)
@@ -1059,11 +1003,6 @@ case 0xEF: //RST 28H
     PC.LO = 0x28;
     CLOCK_CYCLES(16);
 case 0xF0: //LDH A, (a8)
-    /*
-    TR.HI = 0xFF;
-    TR.LO = READ(PC.W++);
-    REG_A = READ(TR.W);
-    */
     REG_A = READ(0xFF00+READ(PC.W++));
     CLOCK_CYCLES(12);
 case 0xF1: //POP AF
@@ -1073,11 +1012,6 @@ case 0xF1: //POP AF
     REG_A = READ(SP.W++);
     CLOCK_CYCLES(12);
 case 0xF2: //LD A, (C)
-    /*
-    TR.HI = 0xFF;
-    TR.LO = REG_C;
-    REG_A = READ(TR.W);
-    */
     REG_A = READ(0xFF00+REG_C);
     CLOCK_CYCLES(8);
 case 0xF3: //DI
@@ -1118,18 +1052,6 @@ case 0xF8: //LD HL, SP + r8
     }
 
     HL.W = local_SP;
-
-
-/*
-    offset = READ(PC.W++);
-    TR.W = SP.W + offset;
-    if(offset >= 0) {
-        REG_F = (((SP.W ^ TR.W ^ offset) & 0x1000 ? HF : 0) | (SP.W > TR.W ? CF : 0));
-    } else {
-        REG_F = (((SP.W ^ TR.W ^ offset) & 0x1000 ? HF : 0) | (SP.W < TR.W ? CF : 0));
-    }
-    HL.W = TR.W;
-    */
     CLOCK_CYCLES(12);
 }
 case 0xF9: //LD SP, HL

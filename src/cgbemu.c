@@ -49,7 +49,6 @@ void cgbemu_set_button_pressed(Button button, bool pressed)
         case LEFT:
             gb_key = JOYPAD_LEFT;
             break;
-
         case A:
             gb_key = JOYPAD_A;
             break;

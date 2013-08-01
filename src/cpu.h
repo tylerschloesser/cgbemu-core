@@ -3,19 +3,12 @@
 
 #include "globals.h"
 
-/*
-//remember to change this, maybe a separate debugger file?
-#include "../gui/debugger.h"
-*/
-//TEMP
-extern bool cpu_step;
-extern bool enable_breakpoints;
 typedef union
 {
-    u16 W;
+    uint16_t W;
     struct
     {
-        u8 L, H;
+        uint8_t L, H;
     } B;
 } Z80Register;
 
@@ -44,44 +37,21 @@ typedef struct {
     Z80Register AF; 
     Z80Register IR;
     
-} CpuState;
+} Cpu;
+
+extern Cpu* cpu;
+
 //TODO temp
 void print_cpu_state();
-extern CpuState cpu_state;
-typedef enum {
-    STOPPED,
-    STARTED,
-    PAUSED,
-    EM_INVALID,
-} EmulatorState;
-void change_emulator_state( EmulatorState new_state );
-
 
 //TEMP AND STUPID
-#define hdma_source cpu_state.hdma_source
-#define hdma_destination cpu_state.hdma_destination
-#define hdma_transfer_length cpu_state.hdma_transfer_length
-#define hdma_active cpu_state.hdma_active
-
-
-//TEMPORARY
-extern bool fullspeed;
-
-/* 
- * "counter" is intentionally misspelled until the temporary
- *  cpu state definitions are removed
- */
-void cpu_set_timer_countr( int timer_countr );
-
-CpuState get_cpu_state();
-void set_cpu_state( CpuState cpu_state );
+#define hdma_source cpu->hdma_source
+#define hdma_destination cpu->hdma_destination
+#define hdma_transfer_length cpu->hdma_transfer_length
+#define hdma_active cpu->hdma_active
 
 void initialize_cpu(bool use_bios);
 
 void emulate_cpu();
-
-void start_cpu();
-void stop_cpu();
-void pause_cpu();
 
 #endif /* CPU_H_INCLUDED */
