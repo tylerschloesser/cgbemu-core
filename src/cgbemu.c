@@ -22,7 +22,11 @@ int initialize_cgbemu(const char* cartridge_filepath, const char* bios_filepath)
     bool use_bios = bios_filepath == NULL ? false : true;
     
     initialize_gameboy(use_bios, bios_filepath);
-    initialize_cartridge(cartridge_filepath);
+
+    if(initialize_cartridge(cartridge_filepath) != 0) {
+        return 1;
+    }    
+
     initialize_cpu(use_bios);
     initialize_joypad();
     initialize_screen();

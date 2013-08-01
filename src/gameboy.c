@@ -90,7 +90,7 @@ static int read_bios(const char* filepath) {
  */
 int initialize_gameboy(bool use_bios, const char* bios_filepath)
 {
-    fprintf(stderr, "initialize_gameboy(bios_filepath=%s\n", bios_filepath);
+    fprintf(stderr, "initialize_gameboy(use_bios=%i, bios_filepath=%s)\n",use_bios, bios_filepath);
     assert(gameboy_initialized == false);
 
     gb = (GameboyColor*)calloc(sizeof(GameboyColor), 1);

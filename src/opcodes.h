@@ -12,12 +12,10 @@ case 0x03: //INC BC
     CLOCK_CYCLES(8); 
 case 0x04: //INC B
     REG_B++;
-    //REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF); 5/15/2012
     REG_F = (REG_B ? 0 : ZF) | ((REG_B & 0xF) ? 0 : HF) | (REG_F & CF);
     CLOCK_CYCLES(4);
 case 0x05: //DEC B
     REG_B--;
-    //REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0); 5/15/2012
     REG_F = (REG_B ? 0 : ZF) | NF | ((REG_B & 0xF) == 0xF ? HF : 0) | (REG_F & CF);
     CLOCK_CYCLES(4);
 case 0x06: //LD B, d8

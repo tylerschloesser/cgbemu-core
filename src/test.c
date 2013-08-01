@@ -191,6 +191,11 @@ void specialUp(int key, int x, int y)
 
 int main(int argc, char** argv)
 {
+    if(argc != 2) {
+        printf("Invalid arguments\n");
+        return EXIT_FAILURE;
+    }
+
     if(initialize_cgbemu(argv[1], NULL) != 0) {
         return EXIT_FAILURE;
     }
