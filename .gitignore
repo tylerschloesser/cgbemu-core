@@ -12,4 +12,5 @@ src/test
 *.out
 *.old
 *.exe
+gmon.*
 dumps/
