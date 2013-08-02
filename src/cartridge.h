@@ -3,10 +3,6 @@
 
 #include "globals.h"
 
-
-int initialize_cartridge(const char* cartridge_filepath);
-
-
 typedef enum {
     NONE,
     MBC1,
@@ -49,10 +45,6 @@ typedef enum {
     ID_HUC1_RAM_BATTERY
 } CartridgeId;
 
-void cartridge_update_mbc(void);
-void cartridge_update_selected_rom(void);
-void cartridge_update_selected_ram(void);
-
 typedef struct {
     CartridgeId id;
     char name[32];
@@ -60,8 +52,8 @@ typedef struct {
 
     uint8_t* rom;
     uint8_t* ram;
-    int ram_size;
-    int rom_size;
+    uint32_t  ram_size;
+    uint32_t rom_size;
 
     uint8_t* selected_rom;
     uint8_t* selected_ram;
@@ -82,4 +74,9 @@ typedef struct {
 
 extern Cartridge* cartridge;
 
-#endif /* CARTRIDGE_H */
+int initialize_cartridge(const char* cartridge_filepath);
+void cartridge_update_mbc(void);
+void cartridge_update_selected_rom(void);
+void cartridge_update_selected_ram(void);
+
+#endif // CARTRIDGE_H

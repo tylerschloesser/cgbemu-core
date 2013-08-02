@@ -15,8 +15,8 @@
 #define RGB565(r, g, b)  (((r) << (5+6)) | ((g) << 6) | (b))
 #define SCREEN_BUFFER_SIZE (sizeof(screen_buffer[0]) * TEXTURE_WIDTH * TEXTURE_HEIGHT)
 
-int window_width = 80;
-int window_height = 77;
+int window_width = 320;
+int window_height = 288;
 
 static GLuint texture = 0;
 static uint16_t *screen_buffer = NULL;

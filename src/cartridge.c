@@ -1,11 +1,6 @@
+#include <string.h>
 #include "cartridge.h"
 #include "memory.h"
-#include <string.h>
-
-
-Cartridge* cartridge = NULL;
-
-static int verify_cartridge(void);
 
 typedef struct {
     int header_value;
@@ -13,41 +8,6 @@ typedef struct {
     char name[32];
     int id;
 } CartridgeType;
-
-void cartridge_update_mbc(void) {
-    assert(cartridge != NULL);
-
-    switch(cartridge->mbc) {
-        case NONE:
-            break;
-        case MBC1:
-            cartridge->read = &mbc1_read;
-            cartridge->write = &mbc1_write;
-            break; 
-        case MBC2:
-            cartridge->read = &mbc2_read;
-            cartridge->write = &mbc2_write;
-            break; 
-        case MBC3:
-            cartridge->read = &mbc3_read;
-            cartridge->write = &mbc3_write;
-            break;
-        case MBC4:
-            cartridge->read = &mbc4_read;
-            cartridge->write = &mbc4_write;
-            break;
-        case MBC5:
-            cartridge->read = &mbc5_read;
-            cartridge->write = &mbc5_write;
-            break; 
-        default:
-            fprintf(stderr, "Unsupported MBC\n");
-            assert(false);
-            break;
-    }
-}
-    
- 
 
 CartridgeType cartridge_types[] = {
     { 0x00, NONE, "ROM ONLY", ID_ROM_ONLY},
@@ -81,6 +41,51 @@ CartridgeType cartridge_types[] = {
     { 0xFF, UNSUPPORTED, "HUC1+RAM+BATTERY", ID_HUC1_RAM_BATTERY }
 };
 
+Cartridge* cartridge = NULL;
+
+static int get_cartridge_ram_size(int header_value);
+static int verify_cartridge(void);
+static void print_cartridge_info(void);
+
+/**
+ * Sets the read and write functions for the cartridge
+ */
+void cartridge_update_mbc(void) {
+    assert(cartridge != NULL);
+
+    switch(cartridge->mbc) {
+        case NONE:
+            break;
+        case MBC1:
+            cartridge->read = &mbc1_read;
+            cartridge->write = &mbc1_write;
+            break; 
+        case MBC2:
+            cartridge->read = &mbc2_read;
+            cartridge->write = &mbc2_write;
+            break; 
+        case MBC3:
+            cartridge->read = &mbc3_read;
+            cartridge->write = &mbc3_write;
+            break;
+        case MBC4:
+            cartridge->read = &mbc4_read;
+            cartridge->write = &mbc4_write;
+            break;
+        case MBC5:
+            cartridge->read = &mbc5_read;
+            cartridge->write = &mbc5_write;
+            break; 
+        default:
+            fprintf(stderr, "Unsupported MBC\n");
+            assert(false);
+            break;
+    }
+}
+
+/**
+ * Returns true if the cartridge containes a battery, false otherwise
+ */
 bool get_has_battery(CartridgeType* cartridge_type) {
     assert(cartridge_type != NULL);
 
@@ -101,6 +106,9 @@ bool get_has_battery(CartridgeType* cartridge_type) {
     return false;
 }
 
+/**
+ * Returns the type of cartridge based on the cartridge header
+ */
 CartridgeType* get_cartridge_type(int header_value) {
     for(int i = 0; i < (sizeof(cartridge_types) / sizeof(CartridgeType)); ++i) {
         if(cartridge_types[i].header_value == header_value) {
@@ -110,8 +118,9 @@ CartridgeType* get_cartridge_type(int header_value) {
     return NULL;
 }
 
-static int get_cartridge_ram_size(int header_value);
-
+/**
+ * Reads the entire file into the cartridge rom
+ */
 static int read_cartridge(const char* filepath) {
     assert(filepath);
     FILE* file = fopen(filepath, "rb");
@@ -137,23 +146,22 @@ static int read_cartridge(const char* filepath) {
     return 0;
 }
 
+/**
+ * Sets up the cartridge structure. This includes reading the cartridge file,
+ * parsing the cartridge header, and allocating memory
+ */
 int initialize_cartridge(const char* cartridge_filepath) {
-    
-    fprintf(stderr, "initialize_cartridge(cartridge_filepath=%s)\n",
-            cartridge_filepath);
-
     assert(cartridge_filepath);
-
-    //TODO make this better
     assert(cartridge == NULL);
+
     cartridge = (Cartridge*)calloc(sizeof(Cartridge), 1);
-    assert(cartridge != NULL);
+    assert(cartridge);
     
     if(read_cartridge(cartridge_filepath) != 0) {
         return 1;
     }
 
-    /* Cartridge RAM */
+    // Allocate RAM
     cartridge->ram_size = get_cartridge_ram_size(cartridge->rom[0x0149]);
     //TODO handle errors
     assert(cartridge->ram_size >= 0);
@@ -166,16 +174,13 @@ int initialize_cartridge(const char* cartridge_filepath) {
         cartridge->ram = NULL;
     }
 
-    /* TYPE */
+    // Determine the type of cartridge
     CartridgeType* cartridge_type = get_cartridge_type(cartridge->rom[0x0147]);
     //TODO handle errors
     assert(cartridge_type != NULL);
     cartridge->id = cartridge_type->id;
     memcpy(cartridge->name, cartridge_type->name, 32);
     cartridge->mbc = cartridge_type->mbc;
-
-    printf("cartridge type: %s\n", cartridge_type->name);
-
 
     cartridge_update_mbc();
 
@@ -184,29 +189,50 @@ int initialize_cartridge(const char* cartridge_filepath) {
     cartridge_update_selected_rom();
     cartridge_update_selected_ram();
 
-    printf("cartridge loaded \n\tRAM: %i KiB\n\tROM: %i KiB\n", 
-            cartridge->ram_size / 1024, cartridge->rom_size / 1024);
+    if(verify_cartridge() != 0) {
+        return 1;
+    }
 
-    //TODO actually verify...
-    verify_cartridge();
+    print_cartridge_info();
 
     return 0;
 }
 
+static void print_cartridge_info(void) {
+    assert(cartridge);
+    printf("---Cartridge Information---\n");
+
+    char title[0x10];
+    title[0x10 - 1] = '\0';
+    for(int i = 0x134; i < 0x144; ++i) {
+        title[i - 0x134] = cartridge->rom[i];
+    }
+    printf("Title: %s\n", title);
+
+    printf("Type: %s\n", cartridge->name);
+    printf("RAM: %i KiB\n", cartridge->ram_size / 1024);
+    printf("ROM: %i KiB\n", cartridge->rom_size / 1024);
+    printf("\n");
+}
+
+
 static int get_cartridge_ram_size(int header_value) {
     switch(header_value) {
         case 0:
-            return 0; /* no cartridge ram */
+            return 0; // no cartridge ram
         case 1:
-            return 0x800; /* 2KiB */
+            return 0x800; // 2KiB
         case 2:
-            return 0x2000; /* 8KiB */
+            return 0x2000; // 8KiB
         case 3:
-            return 0x8000; /* 32KiB */
+            return 0x8000; // 32KiB
     }
     return -1;
 }
 
+/**
+ * Returned the expected rom size based on the cartridge header
+ */
 static int get_cartridge_rom_size(int header_value) {
     if(header_value >= 0 && header_value <= 7) {
         return(0x8000 << header_value);
@@ -222,31 +248,31 @@ void cartridge_update_selected_rom(void) {
      
 }
 void cartridge_update_selected_ram(void) {
-
     cartridge->selected_ram = 
         &cartridge->ram[cartridge->selected_ram_bank * 0x2000];
 }
 
-
-
-
-/* TODO finish this */
+/**
+ * Checks that the cartridge ROM size is what it should be. Also
+ * calculated the Checksum; however, an invalid checksum isn't 
+ * considered an error
+ */
 static int verify_cartridge(void) {
     
-    char title[0x10];
-    title[0x10 - 1] = '\0';
-    for(int i = 0x134; i < 0x144; ++i) {
-        title[i - 0x134] = cartridge->rom[i];
-    }
-    printf("Title: %s\n", title);
-
+    
+    // Verify the size of the ROM
     int expected_cartridge_rom_size =
        get_cartridge_rom_size(cartridge->rom[0x148]);
 
     printf("expected ROM size: %i KiB\n", 
             expected_cartridge_rom_size / 1024);
+
+    if(cartridge->rom_size != expected_cartridge_rom_size) {
+        printf("The size of the Cartridge is invalid\n");
+        return 1;
+    }
     
-    /* CHECKSUM */
+    // Calculate checksum
     uint32_t sum = 0;
     for(int i = 0; i < cartridge->rom_size; ++i) {
         sum += cartridge->rom[i];
@@ -264,5 +290,4 @@ static int verify_cartridge(void) {
 
     return 0;
 }
-
 

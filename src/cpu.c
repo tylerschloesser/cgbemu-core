@@ -13,7 +13,6 @@
 /* TEMPORARY so we can use existing variables names */
 #define waiting_for_interrupt   cpu->waiting_for_interrupt
 #define timer_counter           cpu->timer_counter
-//#define cpu_running           cpu->running
 #define scanline_counter        cpu->scanline_counter
 #define cycles                  cpu->cycles
 #define mode_cycles             cpu->mode_cycles
@@ -40,21 +39,20 @@
 #define HI B.H
 #define LO B.L
 
-// memory access functions
+// Memory access functions
 #define READ(S) memory_read(S)
 #define WRITE(D, B) memory_write(D, B)
 
-/* behavior at the end of each instruction */
+// Behavior at the end of each instruction
 #define CLOCK_CYCLES(x) return(x)
 
-/* behavior on invalid opcode */
+// Behavior on invalid opcode
 #define INVALID_OPCODE(X)                   \
     printf("Invalid opcode (%X)!\n", X);    \
     getchar();                              \
     exit(1)
 
 #define CLOCK_SPEED_HZ 4194304
-//#define VBLANK_CYCLES CLOCK_SPEED_HZ / 60
 
 #define GB_H_SYNC_KHZ 9198
 #define GB_V_SYNC_HZ 59.73
@@ -338,10 +336,9 @@ u16 DAA_table[] = {
     0x8A50,0x8B50,0x8C50,0x8D50,0x8E50,0x8F50,0x9050,0x9150,
     0x9250,0x9350,0x9450,0x9550,0x9650,0x9750,0x9850,0x9950,
 };
-//static s32 timer_counter_table[] = { 1024, 16, 64, 256 };
-static s32 timer_counter_table[] = { 256, 4, 16, 64 };
 
-/* internal functions */
+static int timer_counter_table[] = { 256, 4, 16, 64 };
+
 static int execute();
 static void interrupt( InterruptType type );
 static void update_lcd_status();
@@ -394,6 +391,9 @@ void initialize_cpu(bool use_bios)
     cpu_initialized = true;
 }
 
+/**
+ * Runs the CPU until a VBlank
+ */
 void emulate_cpu() {
 
     emulating = true;
@@ -401,7 +401,7 @@ void emulate_cpu() {
 
         u32 current_cycles = execute();
 
-        /*TODO just testing...*/
+        // TODO update opcodes so they return the proper cycles
         current_cycles /= 4;
         
         cycles += current_cycles;
@@ -421,12 +421,15 @@ void emulate_cpu() {
 /**
  *  
  */
-static void sync_refresh_rate( u32 *total_cycles ) 
+static void sync_refresh_rate(u32 *total_cycles) 
 {
     if(*total_cycles < SCREEN_REFRESH_CYCLES) return;
     *total_cycles = 0;
 }
 
+/*
+ * Set the interrupt flag for the specified interrupt
+ */
 static void interrupt(InterruptType type) {
     waiting_for_interrupt = false;
     switch( type ) {
@@ -452,137 +455,112 @@ static void interrupt(InterruptType type) {
     }
 }
 
+/**
+ * Updates the current LCD mode and triggers interrupts when necessary
+ */
 static void update_lcd_status()
 {
-    
-    u8 lcd_status = gb->hw_registers[STAT] & 0xFC;  /* clear 2 LSB */
-    if((gb->hw_registers[LCDC] & LCD_DISPLAY_ENABLE) == 0) {
-        /* LCD is disabled */
+    uint8_t lcd_status = gb->hw_registers[STAT] & 0xFC;  // Clear 2 LSB
+    uint8_t current_lcd_mode = gb->hw_registers[STAT] & 0x3;
+    uint8_t lcd_mode = 0;
+    bool lcd_interrupt = false;
+ 
+    if(!lcd_enabled) {
+        // LCD is disabled
         scanline_counter = 456;
         gb->hw_registers[LY] = 0;
-        lcd_status |= 1;
+        gb->hw_registers[STAT] = lcd_status | 1;
+        return;
+    }
+   
+    if(gb->hw_registers[LY] >= 144) {
+        // LCD is in VBlank
+        gb->hw_registers[STAT] = lcd_status | 1;
+        return;
+    }
+    
+    if(scanline_counter >= (456 - 80)) {
+        // Mode 2
+        lcd_mode = 2;
+        lcd_status |= 2;
+        lcd_interrupt = (lcd_status & 0x20);
+
+    } else if(scanline_counter >= ((456 - 80) - 172)) {
+        // Mode 3
+        lcd_mode = 3;
+        lcd_status |= 3;
     } else {
-        /* LCD is enabled */
-        u8 lcd_mode = gb->hw_registers[STAT] & 0x3;
-        u8 new_lcd_mode = 0;
-        bool lcd_interrupt = false;
-        
-        /* TODO shouldn't this be >= 144? */
-        if(gb->hw_registers[LY] > 144) {
-            /* LCD is in vertical blank, set mode to 1 */
-            new_lcd_mode = 1;
-            lcd_status |= 1;
-        } else {
-            if(scanline_counter >= (456 - 80)) {
-                /* mode 2 */
-                new_lcd_mode = 2;
-                lcd_status |= 2;
-                if(lcd_status & 0x20) {
-                    lcd_interrupt = true;
-                }
-            } else if(scanline_counter >= ((456 - 80) - 172)) {
-                /* mode 3 */
-                new_lcd_mode = 3;
-                lcd_status |= 3;
-            } else {
-                /* mode 0 */
-                new_lcd_mode = 0;
-                
-                u8 scanline = gb->hw_registers[LY];
-                if(lcd_status & 0x8) {
-                    /* i don't think there is an interrupt for
-                       lines past 143... */
-                    if(scanline < 144)
-                        lcd_interrupt = true;
-                }
+        // Mode 0 (HBlank)
+        lcd_mode = 0;
+        lcd_interrupt = (lcd_status & 0x08);
 
-                /* TODO testing */
-                if((new_lcd_mode != lcd_mode) && (scanline < 144)) {
-                    /* HBlank check if there is an HDMA transfer in progress */
-                    if(hdma_active) {
-                        hdma_transfer();
-                    }
-                }
-
-            }
-        }
-        
-        if(lcd_interrupt && (lcd_mode != new_lcd_mode)) {
-            interrupt( LCD_STATUS );
+        // Check if there is an HDMA transfer in progress
+        if((lcd_mode != current_lcd_mode) && hdma_active) {
+            hdma_transfer();
         }
     }
-
+    
+    if(lcd_interrupt && (lcd_mode != current_lcd_mode)) {
+        interrupt(LCD_STATUS);
+    }
     
     gb->hw_registers[STAT] = lcd_status;
 }
 
-
-
-
-static void update_lcd( u32 current_cycles )
+/**
+ * Update the current LCD scanline
+ */
+static void update_lcd(u32 current_cycles)
 {
-    if(gb->hw_registers[LCDC] & LCD_DISPLAY_ENABLE) {
+    if(!lcd_enabled) {
+        // LCD is disabled
+        return;
+    }
 
-        scanline_counter -= current_cycles;
+    scanline_counter -= current_cycles;
+    
+    if(scanline_counter > 0) {
+        return;
+    }
+
+    // Reset the scanline counter
+    scanline_counter = 456;
+    
+    if(gb->hw_registers[LY] == 144) {
+        // VBlank
+        interrupt( VBLANK );
+    } else if(gb->hw_registers[LY] > 153) {
+        // Set to -1 because it will be immediately incremented to 0
+        gb->hw_registers[LY] = -1;
         
-        if(scanline_counter <= 0) {
-            /* TODO verify that this works...
-               previously, the scanline was incremented immediately
-               */
-            /* increment the current scanline */
-            //int scanline = gb->hw_registers[LY]++;
-            
-            /* reset the scanline counter */
-            scanline_counter = 456;
-            
-            
-            
-            if(gb->hw_registers[LY] == 144) {
-                /* enter vertical blank period */
-                interrupt( VBLANK );
-            } else if(gb->hw_registers[LY] > 153) {
-            //} else if(scanline > 153) {
-                /* scanline back to 0 (end of vertical blank) */
-                
-                /* TODO figure out a cleaner way to do this
-                 * previously, gb->hw_registers[LY] was set to 0, but then the 
-                 * first line wouldn't be drawn because the scanline register is incremented 
-                 * before a scanline is rendered
-                 */
-                gb->hw_registers[LY] = -1;
-                
-            } else if(gb->hw_registers[LY] < 144) {
-            //} else if(scanline < 144) {
-                render_scanline();
-            }
-            
-            ++gb->hw_registers[LY];
+    } else if(gb->hw_registers[LY] < 144) {
+        render_scanline();
+    }
+    
+    ++gb->hw_registers[LY];
 
-            /* TODO this is in testing.... */
-            if(gb->hw_registers[LY] == gb->hw_registers[LYC]) {
-                gb->hw_registers[STAT] |= 0x02;
-                if(gb->hw_registers[STAT] & 0x40) {
-                    interrupt(LCD_STATUS);
-                    printf("happening...\n");
-                }
-            } else {
-                gb->hw_registers[STAT] &= ~0x02;
-            }
+    // TODO this has not been tested
+    if(gb->hw_registers[LY] == gb->hw_registers[LYC]) {
+        gb->hw_registers[STAT] |= 0x02;
+        if(gb->hw_registers[STAT] & 0x40) {
+            interrupt(LCD_STATUS);
         }
+    } else {
+        gb->hw_registers[STAT] &= ~0x02;
     }
 }
 
-static void update_timer( u32 current_cycles )
+static void update_timer(u32 current_cycles)
 {
     if((gb->hw_registers[TAC] & 0x4) == 0) {
-        /* timer is stopped */
+        // Timer is stopped
         return;
     }
     
     timer_counter -= current_cycles;
     
     if(timer_counter <= 0) {
-        /* reset the counter */
+        // Reset the counter
         int index = gb->hw_registers[TAC] & 0x3;
         timer_counter = timer_counter_table[index];
         
@@ -600,12 +578,16 @@ static void update_divider(u32 current_cycles)
     divider_counter += current_cycles;
     
     if(divider_counter >= 255) {
-        /* increment divider register */
+        // Increment divider register
         divider_counter = 0;
         ++gb->hw_registers[DIV];
     }
 }
 
+/**
+ * Pushes the current program counter on to the stack and updates it to
+ * the corresponding interrupt handler location
+ */
 static void service_interrupts(void)
 {
     if(gb->ime_flag && gb->ie_register && gb->hw_registers[IF]) {
@@ -679,7 +661,9 @@ void print_cpu_state()
             IR.W);
 }
 
-
+/*
+ * Fetch and execute the next instruction and return the number of cycles
+ */
 static int execute() {
 
     // Variables that may be used by certain instructions

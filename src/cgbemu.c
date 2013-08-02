@@ -78,7 +78,7 @@ void cgbemu_set_button_pressed(Button button, bool pressed)
 
 uint16_t* cgbemu_get_screen_buffer()
 {
-    return get_screen_buffer();
+    return (uint16_t*)screen_buffer;
 }
 
 void cgbemu_save_state(const char* filepath) {
